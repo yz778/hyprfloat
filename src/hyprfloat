@@ -1,0 +1,772 @@
+#!/usr/bin/env lua
+
+local cjson = require("cjson")
+local config = {}
+
+local function load_config()
+    local xdg_config_home = os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")
+    local success, result = pcall(function()
+        return dofile(xdg_config_home .. "/hypr/hyprfloat.conf.lua")
+    end)
+
+    return success and result
+        or {
+            debug = false,
+            overview = {
+                -- Overview window sizes
+                target_ratio = 1.6, -- 16:10
+                min_w = 160,
+                min_h = 100,
+                -- Grid layout configuration
+                sqrt_multiplier = 1.4,  -- Multiplier for calculating optimal grid dimensions
+                max_cols = 5,           -- Maximum number of columns in grid
+                spacing_factor = 0.024, -- Factor for calculating gap size based on screen dimensions
+                min_gap = 8,            -- Minimum gap between windows
+                margin_multiplier = 2,  -- Multiplier for margin (gap * margin_multiplier)
+                -- Aspect ratio constraints
+                max_ratio = 2.2,        -- Maximum width/height ratio before adjusting
+                min_ratio = 0.9,        -- Minimum width/height ratio before adjusting
+
+                options = {},
+            },
+            float_mode = {
+                tiling_commands = {},
+                floating_commands = {}
+            }
+        }
+end
+
+local function fix_color_hex(input)
+    -- hyprctl getoption returns colors in legacy format without the leading 0x
+    -- but hyprctl keyword doesn't accept that, so we have it back
+    return type(input) == "string" and input:gsub('%f[%w](%x%x%x%x%x%x%x%x)%f[%W]', '0x%1') or input
+end
+
+local function dump(obj)
+    print(cjson.encode(obj))
+    os.exit(0)
+end
+
+local function exec_cmd(cmd)
+    if config.debug then print("---------\n[execute] " .. cmd) end
+
+    local handle = io.popen(cmd)
+    local result = handle and handle:read("*a") or ""
+    if handle then handle:close() end
+
+    if config.debug then print("[result ] " .. result) end
+
+    return result
+end
+
+local function exec_hyprctl_batch(...)
+    local commands = table.concat({ ... }, " ; ")
+    local cmd = string.format("hyprctl --batch '%s'", commands)
+    exec_cmd(cmd)
+end
+
+local function get_cmd_json(command)
+    local output = exec_cmd(command)
+    if output == "" then return {} end
+    return cjson.decode(output)
+end
+
+local function get_active_window()
+    return get_cmd_json("hyprctl activewindow -j")
+end
+
+local function get_monitors()
+    return get_cmd_json("hyprctl monitors -j")
+end
+
+local function get_clients()
+    return get_cmd_json("hyprctl clients -j")
+end
+
+local function get_workspaces()
+    return get_cmd_json("hyprctl workspaces -j")
+end
+
+local function get_hyprsocket()
+    local posix = require("posix")
+
+    local xdg_runtime_dir = os.getenv("XDG_RUNTIME_DIR")
+    local hyprland_sig = os.getenv("HYPRLAND_INSTANCE_SIGNATURE")
+    local sock_path = string.format("%s/hypr/%s/.socket2.sock", xdg_runtime_dir, hyprland_sig)
+
+    local sock = posix.socket(posix.AF_UNIX, posix.SOCK_STREAM, 0)
+    if not sock then
+        error("Failed to create socket")
+    end
+
+    local addr = { family = posix.AF_UNIX, path = sock_path }
+    local ok, err = posix.connect(sock, addr)
+    if not ok then
+        posix.close(sock)
+        error("Failed to connect to socket: " .. (err or "unknown error"))
+    end
+
+    return sock
+end
+
+local function parse_gaps(gaps_str)
+    if not gaps_str then return { top = 0, right = 0, bottom = 0, left = 0 } end
+
+    local values = {}
+    for value in gaps_str:gmatch("%S+") do
+        table.insert(values, tonumber(value) or 0)
+    end
+
+    local count = #values
+    return count == 1 and { top = values[1], right = values[1], bottom = values[1], left = values[1] }
+        or count == 2 and { top = values[1], right = values[2], bottom = values[1], left = values[2] }
+        or count == 4 and { top = values[1], right = values[2], bottom = values[3], left = values[4] }
+        or { top = 0, right = 0, bottom = 0, left = 0 }
+end
+
+local function get_border_gap_config()
+    local config = {
+        border_size = 0,
+        gaps_in = { top = 0, right = 0, bottom = 0, left = 0 },
+        gaps_out = { top = 0, right = 0, bottom = 0, left = 0 }
+    }
+
+    local border_output = exec_cmd("hyprctl getoption general:border_size -j")
+    if border_output ~= "" then
+        local border_data = cjson.decode(border_output)
+        config.border_size = border_data.int or 0
+    end
+
+    local gaps_in_output = exec_cmd("hyprctl getoption general:gaps_in -j")
+    if gaps_in_output ~= "" then
+        local gaps_in_data = cjson.decode(gaps_in_output)
+        if gaps_in_data.custom then
+            config.gaps_in = parse_gaps(gaps_in_data.custom)
+        elseif gaps_in_data.int then
+            local val = gaps_in_data.int
+            config.gaps_in = { top = val, right = val, bottom = val, left = val }
+        end
+    end
+
+    local gaps_out_output = exec_cmd("hyprctl getoption general:gaps_out -j")
+    if gaps_out_output ~= "" then
+        local gaps_out_data = cjson.decode(gaps_out_output)
+        if gaps_out_data.custom then
+            config.gaps_out = parse_gaps(gaps_out_data.custom)
+        elseif gaps_out_data.int then
+            local val = gaps_out_data.int
+            config.gaps_out = { top = val, right = val, bottom = val, left = val }
+        end
+    end
+
+    return config
+end
+
+local function calculate_effective_area(monitor, border_gap)
+    local screen_x = monitor.x + monitor.reserved[3]
+    local screen_y = monitor.y + monitor.reserved[2]
+    local screen_w = monitor.width - monitor.reserved[3] - monitor.reserved[4]
+    local screen_h = monitor.height - monitor.reserved[1] - monitor.reserved[2]
+
+    local left_gap = border_gap.gaps_out.left + border_gap.gaps_in.left
+    local right_gap = border_gap.gaps_out.right + border_gap.gaps_in.right
+    local top_gap = border_gap.gaps_out.top + border_gap.gaps_in.top
+    local bottom_gap = border_gap.gaps_out.bottom + border_gap.gaps_in.bottom
+    local border_adjustment = border_gap.border_size * 2
+
+    return {
+        x = screen_x + left_gap + border_gap.border_size,
+        y = screen_y + top_gap + border_gap.border_size,
+        w = screen_w - left_gap - right_gap - border_adjustment,
+        h = screen_h - top_gap - bottom_gap - border_adjustment,
+        screen = { x = screen_x, y = screen_y, w = screen_w, h = screen_h }
+    }
+end
+
+local function clamp_window_to_area(win_x, win_y, win_w, win_h, effective_area)
+    local new_w = math.min(win_w, effective_area.w)
+    local new_h = math.min(win_h, effective_area.h)
+    local new_x = math.max(effective_area.x, math.min(win_x, effective_area.x + effective_area.w - new_w))
+    local new_y = math.max(effective_area.y, math.min(win_y, effective_area.y + effective_area.h - new_h))
+
+    return new_x, new_y, new_w, new_h
+end
+
+local function get_active_context()
+    local activewindow = get_active_window()
+    if not activewindow then return nil end
+
+    local monitors = get_monitors()
+
+    local monitor
+    for _, m in ipairs(monitors) do
+        if m.id == activewindow.monitor then
+            monitor = m
+            break
+        end
+    end
+    if not monitor then return nil end
+
+    local border_gap = get_border_gap_config()
+    local effective_area = calculate_effective_area(monitor, border_gap)
+
+    return {
+        window = activewindow,
+        screen = effective_area.screen,
+        effective_area = effective_area,
+        border_gap = border_gap
+    }
+end
+
+local function center_window(scale)
+    local context = get_active_context()
+    if not context then error("No active window/monitor context") end
+
+    local min_scale = 0.25
+    local win = context.window
+    local screen = context.screen
+    local effective_area = context.effective_area
+
+    local new_w = math.floor(math.min(math.max(win.size[1] * scale, effective_area.w * min_scale), effective_area.w))
+    local new_h = math.floor(math.min(math.max(win.size[2] * scale, effective_area.h * min_scale), effective_area.h))
+    local new_x = screen.x + math.floor((screen.w - new_w) / 2)
+    local new_y = screen.y + math.floor((screen.h - new_h) / 2)
+
+    exec_hyprctl_batch(
+        "dispatch fullscreenstate 0",
+        string.format("dispatch moveactive exact %d %d", new_x, new_y),
+        string.format("dispatch resizeactive exact %d %d", new_w, new_h),
+        "dispatch alterzorder top"
+    )
+end
+
+local function snap_window(x0_frac, x1_frac, y0_frac, y1_frac)
+    local context = get_active_context()
+    if not context then error("No active window/monitor context") end
+
+    local effective_area = context.effective_area
+
+    local new_x = effective_area.x + math.floor(effective_area.w * x0_frac)
+    local new_y = effective_area.y + math.floor(effective_area.h * y0_frac)
+    local new_w = math.floor(effective_area.w * (x1_frac - x0_frac))
+    local new_h = math.floor(effective_area.h * (y1_frac - y0_frac))
+
+    exec_hyprctl_batch(
+        "dispatch fullscreenstate 0",
+        string.format("dispatch moveactive exact %d %d", new_x, new_y),
+        string.format("dispatch resizeactive exact %d %d", new_w, new_h),
+        "dispatch alterzorder top"
+    )
+end
+
+local function has_floating(windows)
+    for _, win in ipairs(windows) do
+        if win.floating then
+            return true
+        end
+    end
+    return false
+end
+
+local function move_window(direction)
+    local old = get_active_context()
+    if not old then error("No active window") end
+
+    local monitors = get_monitors()
+    local moncount = #monitors
+
+    local nextmon = old.window.monitor + tonumber(direction)
+    if nextmon < 0 then nextmon = moncount - 1 end
+    if nextmon >= moncount then nextmon = 0 end
+
+    exec_cmd(string.format("hyprctl dispatch movewindow mon:%d", nextmon))
+
+    local new = get_active_context()
+    if not new or new.window.monitor == old.window.monitor then
+        return true
+    end
+
+    local old_effective = old.effective_area
+    local new_effective = new.effective_area
+
+    -- Calculate relative position on old effective screen
+    local rel_x = (old.window.at[1] - old_effective.x) / old_effective.w
+    local rel_y = (old.window.at[2] - old_effective.y) / old_effective.h
+
+    -- Determine if window is full width/height on old screen (with some tolerance)
+    local tolerance = 10
+    local is_full_width = math.abs(old.window.size[1] - old_effective.w) <= tolerance
+    local is_full_height = math.abs(old.window.size[2] - old_effective.h) <= tolerance
+
+    -- Calculate proportional scaling
+    local scale_w = new_effective.w / old_effective.w
+    local scale_h = new_effective.h / old_effective.h
+    local going_to_smaller = scale_w < 1.0 or scale_h < 1.0
+    local going_to_larger = scale_w > 1.0 or scale_h > 1.0
+
+    local new_w, new_h
+
+    if going_to_smaller and old.window.size[1] <= new_effective.w and old.window.size[2] <= new_effective.h then
+        new_w = old.window.size[1]
+        new_h = old.window.size[2]
+    elseif going_to_larger then
+        if is_full_width then
+            new_w = new_effective.w
+        else
+            new_w = math.floor(old.window.size[1] * scale_w)
+        end
+
+        if is_full_height then
+            new_h = new_effective.h
+        else
+            new_h = math.floor(old.window.size[2] * scale_h)
+        end
+    else
+        new_w = math.floor(old.window.size[1] * scale_w)
+        new_h = math.floor(old.window.size[2] * scale_h)
+    end
+
+    -- Calculate new position maintaining relative position
+    local new_x = new_effective.x + math.floor(rel_x * new_effective.w)
+    local new_y = new_effective.y + math.floor(rel_y * new_effective.h)
+
+    new_x, new_y, new_w, new_h = clamp_window_to_area(new_x, new_y, new_w, new_h, new_effective)
+
+    exec_hyprctl_batch(
+        "dispatch fullscreenstate 0",
+        string.format("dispatch moveactive exact %d %d", new_x, new_y),
+        string.format("dispatch resizeactive exact %d %d", new_w, new_h),
+        "dispatch alterzorder top"
+    )
+end
+
+local function toggle_float(mode)
+    local windows = get_clients()
+    local is_floating = (
+        mode == "on" and false
+        or mode == "off" and true
+        or has_floating(windows)
+    )
+
+    local commands = {}
+    table.insert(commands, string.format('keyword windowrulev2 %s,class:.*', is_floating and "unset" or "float"))
+
+    local mode_commands = is_floating and config.float_mode.tiling_commands or config.float_mode.floating_commands
+    for _, cmd in ipairs(mode_commands) do
+        table.insert(commands, cmd)
+    end
+
+    for _, win in ipairs(windows) do
+        if is_floating == win.floating then
+            table.insert(commands, string.format("dispatch togglefloating address:%s", win.address))
+        end
+    end
+
+    exec_hyprctl_batch(table.unpack(commands))
+
+    if not is_floating then
+        local updated_windows = get_clients()
+        local monitors = get_monitors()
+
+        local monitor_map = {}
+        for _, monitor in ipairs(monitors) do
+            monitor_map[monitor.id] = monitor
+        end
+
+        local border_gap = get_border_gap_config()
+        local clamp_commands = {}
+
+        for _, win in ipairs(updated_windows) do
+            if win.floating then
+                local monitor = monitor_map[win.monitor]
+                if monitor then
+                    local effective_area = calculate_effective_area(monitor, border_gap)
+                    local win_at = win.at
+                    local win_x, win_y, win_w, win_h = win_at[1], win_at[2], win.size[1], win.size[2]
+                    local new_x, new_y, new_w, new_h = clamp_window_to_area(win_x, win_y, win_w, win_h, effective_area)
+                    local needs_focus = false
+
+                    if new_x ~= win_x or new_y ~= win_y then
+                        needs_focus = true
+                        table.insert(clamp_commands, string.format("dispatch moveactive exact %d %d", new_x, new_y))
+                    end
+
+                    if new_w ~= win_w or new_h ~= win_h then
+                        needs_focus = true
+                        table.insert(clamp_commands, string.format("dispatch resizeactive exact %d %d", new_w, new_h))
+                    end
+
+                    if needs_focus then
+                        table.insert(clamp_commands, string.format("dispatch focuswindow address:%s", win.address))
+                    end
+                end
+            end
+        end
+
+        if #clamp_commands > 0 then
+            exec_hyprctl_batch(table.unpack(clamp_commands))
+        end
+    end
+end
+
+local function print_events()
+    local posix = require("posix")
+    local signal = require("posix.signal")
+    local hyprsock = get_hyprsocket()
+
+    local interrupted = false
+    local function signal_handler(signum)
+        print("\nExiting")
+        interrupted = true
+    end
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    print("\nListening for Hyprland events, press CTRL-C to exit...\n")
+    local event_count = 0
+    while not interrupted do
+        local data, err = posix.recv(hyprsock, 4096)
+
+        if interrupted then
+            break
+        end
+
+        if not data then
+            if err then
+                print("Error reading from socket: " .. err)
+            end
+            break
+        end
+
+        for line in data:gmatch("[^\r\n]+") do
+            event_count = event_count + 1
+            print(string.format("%d: %s", event_count, line))
+        end
+    end
+
+    posix.close(hyprsock)
+end
+
+local function overview_mode()
+    local posix = require("posix")
+    local signal = require("posix.signal")
+    local poll = require("posix.poll")
+
+    -- if another instance is running, untoggle the overview
+    local socket_path = "/tmp/hyptool_overview.sock"
+    local sockfd = posix.socket(posix.AF_UNIX, posix.SOCK_STREAM, 0)
+    local addr = { family = posix.AF_UNIX, path = socket_path }
+    if posix.access(socket_path, "f") then
+        local ok, err = posix.connect(sockfd, addr)
+        if ok then
+            posix.send(sockfd, "toggle\n")
+            posix.close(sockfd)
+            print("Sent toggle to running overview instance.")
+            return
+        else
+            os.remove(socket_path)
+        end
+    end
+    posix.close(sockfd)
+
+    -- create new socket listern
+    local listenfd = posix.socket(posix.AF_UNIX, posix.SOCK_STREAM, 0)
+    assert(listenfd, "Failed to create control socket")
+    local ok, err = posix.bind(listenfd, addr)
+    assert(ok, "Failed to bind control socket: " .. (err or "unknown error"))
+    posix.listen(listenfd, 1)
+
+    local hyprsock = get_hyprsocket()
+    local clients = get_clients()
+    local monitors = get_monitors()
+    local workspaces = get_workspaces()
+    local border_gap = get_border_gap_config()
+
+    -- Run option commands, saving original values
+    local orig_options = {}
+    local opt_commands = {}
+    for _, opt in ipairs(config.overview.options) do
+        local key, newval = opt:match("^([^%s]+)%s*(.*)")
+        local origval = get_cmd_json(string.format("hyprctl getoption %s -j", key))
+        table.insert(orig_options, origval)
+        table.insert(opt_commands, string.format("keyword %s %s", key, newval))
+    end
+    exec_hyprctl_batch(table.unpack(opt_commands))
+
+    -- Save all window states
+    local active_window = get_active_window()
+    local orig_windows = {}
+    for _, win in ipairs(clients) do
+        orig_windows[win.address] = win
+    end
+
+    -- For each workspace, float all windows and arrange in grid
+    local grid_commands = {}
+    for _, ws in ipairs(workspaces) do
+        local ws_windows = {}
+        for _, win in ipairs(clients) do
+            if win.workspace.id == ws.id then
+                table.insert(ws_windows, win)
+            end
+        end
+
+        local wincount = #ws_windows
+        if wincount > 0 then
+            local monitorid = ws.monitorID
+            local mon
+            for _, m in ipairs(monitors) do
+                if m.id == monitorid then
+                    mon = m
+                    break
+                end
+            end
+
+            local area = calculate_effective_area(mon, border_gap)
+
+            -- Modern grid layout with optimal spacing and visual hierarchy
+            local cols, rows
+            if wincount < 3 then
+                cols, rows = wincount, 1
+            elseif wincount < 5 then
+                cols, rows = 2, 2
+            else
+                cols = math.min(config.overview.max_cols,
+                    math.ceil(math.sqrt(wincount * config.overview.sqrt_multiplier)))
+                rows = math.ceil(wincount / cols)
+            end
+
+            -- Clean, minimal spacing inspired by modern desktop environments
+            local gap = math.max(config.overview.min_gap,
+                math.floor(math.min(area.w, area.h) * config.overview.spacing_factor))
+            local margin = gap * config.overview.margin_multiplier
+
+            -- Total available space for the grid
+            local grid_w = area.w - (margin * 2)
+            local grid_h = area.h - (margin * 2)
+
+            -- Calculate optimal window size considering gaps between windows
+            local total_gap_w = (cols - 1) * gap
+            local total_gap_h = (rows - 1) * gap
+            local base_win_w = math.floor((grid_w - total_gap_w) / cols)
+            local base_win_h = math.floor((grid_h - total_gap_h) / rows)
+
+            -- Maintain reasonable aspect ratio (prefer 16:10 to 4:3 range)
+            local actual_ratio = base_win_w / base_win_h
+
+            local win_w, win_h
+            if actual_ratio > config.overview.max_ratio then
+                -- Too wide, reduce width to maintain good proportions
+                win_w = math.floor(base_win_h * config.overview.target_ratio)
+                win_h = base_win_h
+            elseif actual_ratio < config.overview.min_ratio then
+                -- Too tall, reduce height
+                win_w = base_win_w
+                win_h = math.floor(base_win_w / config.overview.target_ratio)
+            else
+                -- Good ratio, use calculated dimensions
+                win_w = base_win_w
+                win_h = base_win_h
+            end
+
+            -- Ensure minimum usable size
+            win_w = math.floor(math.max(win_w, config.overview.min_w))
+            win_h = math.floor(math.max(win_h, config.overview.min_h))
+
+            -- Center the entire grid if windows are smaller than available space
+            local actual_grid_w = cols * win_w + (cols - 1) * gap
+            local actual_grid_h = rows * win_h + (rows - 1) * gap
+            local grid_offset_x = math.floor((grid_w - actual_grid_w) / 2)
+            local grid_offset_y = math.floor((grid_h - actual_grid_h) / 2)
+
+            -- Arrange windows in clean, precise grid
+            for i, win in ipairs(ws_windows) do
+                local row = math.floor((i - 1) / cols)
+                local col = (i - 1) % cols
+
+                -- Calculate precise position with no randomization for clean look
+                local win_x = math.floor(area.x + margin + grid_offset_x + col * (win_w + gap))
+                local win_y = math.floor(area.y + margin + grid_offset_y + row * (win_h + gap))
+
+                -- Float and move/resize with smooth batch operations
+                table.insert(grid_commands, string.format("dispatch focuswindow address:%s", win.address))
+                if not win.floating then
+                    table.insert(grid_commands, string.format("dispatch togglefloat address:%s", win.address))
+                end
+
+                table.insert(grid_commands, string.format("dispatch moveactive exact %d %d", win_x, win_y))
+                table.insert(grid_commands, string.format("dispatch resizeactive exact %d %d", win_w, win_h))
+            end
+        end
+    end
+    table.insert(grid_commands, string.format("dispatch focuswindow address:%s", active_window.address))
+    exec_hyprctl_batch(table.unpack(grid_commands))
+
+    local function restore_options()
+        local opt_commands = {}
+        for _, opt in ipairs(orig_options) do
+            local val = opt.int and opt.int
+                or opt.float and opt.float
+                or opt.custom and fix_color_hex(opt.custom)
+            print(opt.option, val)
+            table.insert(opt_commands, string.format("keyword %s %s", opt.option, val))
+        end
+        exec_hyprctl_batch(table.unpack(opt_commands))
+    end
+
+    local function restore_windows(activewin_addr)
+        local commands = {}
+        local clients = get_clients()
+        for _, new in pairs(clients) do
+            local addr = new.address
+            local old = orig_windows[addr]
+            if old then
+                table.insert(commands, string.format("dispatch focuswindow address:%s", addr))
+                if old.floating ~= new.floating then
+                    table.insert(commands, string.format("dispatch togglefloat address:%s", addr))
+                end
+                table.insert(commands, string.format("dispatch moveactive exact %d %d", old.at[1], old.at[2]))
+                table.insert(commands, string.format("dispatch resizeactive exact %d %d", old.size[1], old.size[2]))
+            end
+        end
+
+        if activewin_addr then
+            table.insert(commands, string.format("dispatch focuswindow address:%s", activewin_addr))
+        end
+
+        exec_hyprctl_batch(table.unpack(commands))
+    end
+
+    local function cleanup_and_exit(activewin_addr)
+        restore_options()
+        restore_windows(activewin_addr)
+
+        if listenfd then
+            posix.close(listenfd)
+            os.remove(socket_path)
+        end
+        if hyprsock then
+            posix.close(hyprsock)
+        end
+        os.exit(0)
+    end
+
+    local interrupted = false
+    local function signal_handler()
+        interrupted = true
+        cleanup_and_exit()
+    end
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    print("Overview mode active. Waiting for focus change or toggle...")
+
+    local done = false
+    while not done and not interrupted do
+        -- uncomment to exit overview mode on window focus
+        --
+        -- local hypr_ready = poll.rpoll(hyprsock, 50)
+        -- if hypr_ready and hypr_ready > 0 then
+        --     local data = posix.recv(hyprsock, 4096)
+        --     for eventline in data:gmatch("[^\r\n]+") do
+        --         local addr = eventline:match("^activewindowv2>>(.+)$")
+        --         if addr then
+        --             cleanup_and_exit("0x" .. addr)
+        --             done = true
+        --             break
+        --         end
+        --     end
+        -- end
+
+        local control_ready = poll.rpoll(listenfd, 0)
+        if not done and control_ready and control_ready > 0 then
+            local conn = posix.accept(listenfd)
+            if conn then
+                local msg = posix.recv(conn, 1024)
+                posix.close(conn)
+                if msg and msg:match("toggle") then
+                    print("Received toggle message, exiting overview mode.")
+                    cleanup_and_exit()
+                    done = true
+                end
+            end
+        end
+    end
+
+    print("Exiting overview mode.")
+    cleanup_and_exit()
+end
+
+local function print_help()
+    print("Usage: hyprfloat <command> [args...]\n")
+    print("Commands:\n")
+    print("  center [scale]            - Center active window with scaling")
+    print("  events                    - Listen to Hyprland socket events (for debugging)")
+    print("  movemon [direction]       - Move active window to next monitor")
+    print("  overview                  - GNOME-style overview mode")
+    print("  snap [x0] [x1] [y0] [y1]  - Snap window to screen fraction")
+    print("  togglefloat (mode)        - Toggle floating mode for all windows (on|off|auto)")
+end
+
+local function check_args(argcount, required, usage)
+    if argcount ~= required then
+        print(usage)
+        os.exit(1)
+    end
+end
+
+local handlers = {
+    center = function(arg)
+        check_args(#arg, 1, "Usage: hyprfloat center <scale>")
+        center_window(tonumber(arg[1]))
+    end,
+
+    snap = function(arg)
+        check_args(#arg, 4, "Usage: hyprfloat snap <x0_frac> <x1_frac> <y0_frac> <y1_frac>")
+        snap_window(
+            tonumber(arg[1]),
+            tonumber(arg[2]),
+            tonumber(arg[3]),
+            tonumber(arg[4])
+        )
+    end,
+
+    togglefloat = function(arg)
+        toggle_float(arg[1])
+    end,
+
+    movemon = function(arg)
+        check_args(#arg, 1, "Usage: hyprfloat movemon <direction>")
+        move_window(arg[1])
+    end,
+
+    events = function()
+        print_events()
+    end,
+
+    overview = function()
+        overview_mode()
+    end
+}
+
+--
+-- Main
+--
+
+if #arg < 1 then
+    print_help()
+    os.exit(1)
+end
+
+local command = table.remove(arg, 1)
+config = load_config()
+
+local handler = handlers[command]
+if handler then
+    handler(arg)
+else
+    print("Unknown command: " .. command)
+    print_help()
+    os.exit(1)
+end
