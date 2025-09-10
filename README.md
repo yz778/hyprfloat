@@ -15,9 +15,9 @@
 
 ### Installation (Arch Linux)
 
-1.  Install the required dependencies using `pacman`:
+1.  Install the required dependencies using `yay`:
     ```sh
-    sudo pacman -S lua lua-posix lua-cjson
+    yay -S lua lua-posix lua-cjson
     ```
 
 2.  Place the `hyprfloat` script somewhere in your `$PATH`. For example:
