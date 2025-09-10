@@ -22,13 +22,16 @@
 
 2.  Place the `hyprfloat` script somewhere in your `$PATH`. For example:
     ```sh
-    sudo cp src/hyprfloat /usr/local/bin/
+    cd ~/.local/bin
+    curl -O https://raw.githubusercontent.com/yz778/hyprfloat/refs/heads/main/src/hyprfloat
+    chmod +x hyprfloat
     ```
 
 3.  Copy and customize the sample configuration:
     ```sh
     mkdir -p ~/.config/hypr
-    cp config/hyprfloat.conf.lua ~/.config/hypr/
+    cd ~/.config/hypr
+    curl -O https://raw.githubusercontent.com/yz778/hyprfloat/refs/heads/main/config/hyprfloat.conf.lua
     ```
 
 4.  Add keybindings to your ` ~/.config/hypr/hyprland.conf` ([see below](#bindings))
