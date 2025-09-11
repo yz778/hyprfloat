@@ -1,4 +1,3 @@
--- Core module - main application logic
 local lib = {}
 
 local function print_help()
@@ -20,16 +19,14 @@ function lib.run(args)
     end
 
     local command = table.remove(args, 1)
-
-    -- Load the specific command handler without pcall
     local handler = require("commands." .. command)
+
     if not handler then
         print("Unknown command: " .. command)
         print_help()
         os.exit(1)
     end
 
-    -- Run the handler with args, letting errors bubble up
     handler(args)
 end
 

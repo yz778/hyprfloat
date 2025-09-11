@@ -1,4 +1,3 @@
--- Move window to monitor command
 local hyprland = require("lib.hyprland")
 local utils = require("lib.utils")
 

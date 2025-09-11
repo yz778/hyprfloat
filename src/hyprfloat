@@ -1,11 +1,11 @@
 #!/usr/bin/env lua
 
 local function get_real_script_dir()
-    local script_path = debug.getinfo(1, "S").source:sub(2)
-    local handle = io.popen("readlink -f " .. script_path)
-    local real_path = handle:read("*a"):gsub("\n$", "")
-    handle:close()
-    return real_path:match("^(.+)/[^/]*$") .. "/"
+    local p = debug.getinfo(1, "S").source:sub(2)
+    local h = io.popen("readlink -f " .. p)
+    local r = h:read("*l")
+    h:close()
+    return r:match("(.*/)") or "./"
 end
 
 local script_dir = get_real_script_dir()

@@ -1,4 +1,3 @@
--- Configuration loading module
 local function load_config()
     local xdg_config_home = os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")
     local config_path = xdg_config_home .. "/hypr/hyprfloat.conf.lua"

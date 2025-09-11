@@ -1,4 +1,3 @@
--- Common utility functions
 local cjson = require("cjson")
 local config = require("lib.config")
 

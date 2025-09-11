@@ -1,7 +1,5 @@
--- Hyprland interaction module
 local cjson = require("cjson")
 local utils = require("lib.utils")
-
 
 local hyprland = {}
 

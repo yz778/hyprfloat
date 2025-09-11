@@ -1,4 +1,3 @@
--- Snap window command
 local hyprland = require("lib.hyprland")
 local utils = require("lib.utils")
 

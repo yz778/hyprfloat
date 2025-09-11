@@ -1,4 +1,3 @@
--- Toggle floating mode command
 local hyprland = require("lib.hyprland")
 local utils = require("lib.utils")
 local user_config = require("lib.config")

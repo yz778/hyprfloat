@@ -1,4 +1,3 @@
--- Overview mode command
 local hyprland = require("lib.hyprland")
 local utils = require("lib.utils")
 local config = require("lib.config")

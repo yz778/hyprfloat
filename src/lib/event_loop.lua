@@ -1,4 +1,3 @@
--- Generic event loop module with signal handling
 local signal = require("posix.signal")
 local poll = require("posix.poll")
 
