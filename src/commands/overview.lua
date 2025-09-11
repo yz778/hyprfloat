@@ -6,9 +6,31 @@ local posix = require("posix")
 local signal = require("posix.signal")
 local poll = require("posix.poll")
 
+local default_config = {
+    overview = {
+        -- Overview window sizes
+        target_ratio = 1.6, -- 16:10
+        min_w = 160,
+        min_h = 100,
+        -- Grid layout configuration
+        sqrt_multiplier = 1.4,  -- Multiplier for calculating optimal grid dimensions
+        max_cols = 5,           -- Maximum number of columns in grid
+        spacing_factor = 0.024, -- Factor for calculating gap size based on screen dimensions
+        min_gap = 8,            -- Minimum gap between windows
+        margin_multiplier = 2,  -- Multiplier for margin (gap * margin_multiplier)
+        -- Aspect ratio constraints
+        max_ratio = 2.2,        -- Maximum width/height ratio before adjusting
+        min_ratio = 0.9,        -- Minimum width/height ratio before adjusting
+
+        options = {},
+    },
+}
+
 return function(args)
+    local cfg = utils.deep_merge(default_config, config).overview
+
     -- if another instance is running, untoggle the overview
-    local socket_path = "/tmp/hyptool_overview.sock"
+    local socket_path = "/tmp/hyprfloat_overview.sock"
     local sockfd = posix.socket(posix.AF_UNIX, posix.SOCK_STREAM, 0)
     local addr = { family = posix.AF_UNIX, path = socket_path }
     if posix.access(socket_path, "f") then
@@ -40,7 +62,7 @@ return function(args)
     -- Run option commands, saving original values
     local orig_options = {}
     local opt_commands = {}
-    for _, opt in ipairs(config.overview.options) do
+    for _, opt in ipairs(cfg.options) do
         local key, newval = opt:match("^([^%s]+)%s*(.*)")
         local origval = utils.get_cmd_json(string.format("hyprctl getoption %s -j", key))
         table.insert(orig_options, origval)
@@ -85,15 +107,15 @@ return function(args)
             elseif wincount < 5 then
                 cols, rows = 2, 2
             else
-                cols = math.min(config.overview.max_cols,
-                    math.ceil(math.sqrt(wincount * config.overview.sqrt_multiplier)))
+                cols = math.min(cfg.max_cols,
+                    math.ceil(math.sqrt(wincount * cfg.sqrt_multiplier)))
                 rows = math.ceil(wincount / cols)
             end
 
             -- Clean, minimal spacing inspired by modern desktop environments
-            local gap = math.max(config.overview.min_gap,
-                math.floor(math.min(area.w, area.h) * config.overview.spacing_factor))
-            local margin = gap * config.overview.margin_multiplier
+            local gap = math.max(cfg.min_gap,
+                math.floor(math.min(area.w, area.h) * cfg.spacing_factor))
+            local margin = gap * cfg.margin_multiplier
 
             -- Total available space for the grid
             local grid_w = area.w - (margin * 2)
@@ -109,14 +131,14 @@ return function(args)
             local actual_ratio = base_win_w / base_win_h
 
             local win_w, win_h
-            if actual_ratio > config.overview.max_ratio then
+            if actual_ratio > cfg.max_ratio then
                 -- Too wide, reduce width to maintain good proportions
-                win_w = math.floor(base_win_h * config.overview.target_ratio)
+                win_w = math.floor(base_win_h * cfg.target_ratio)
                 win_h = base_win_h
-            elseif actual_ratio < config.overview.min_ratio then
+            elseif actual_ratio < cfg.min_ratio then
                 -- Too tall, reduce height
                 win_w = base_win_w
-                win_h = math.floor(base_win_w / config.overview.target_ratio)
+                win_h = math.floor(base_win_w / cfg.target_ratio)
             else
                 -- Good ratio, use calculated dimensions
                 win_w = base_win_w
@@ -124,8 +146,8 @@ return function(args)
             end
 
             -- Ensure minimum usable size
-            win_w = math.floor(math.max(win_w, config.overview.min_w))
-            win_h = math.floor(math.max(win_h, config.overview.min_h))
+            win_w = math.floor(math.max(win_w, cfg.min_w))
+            win_h = math.floor(math.max(win_h, cfg.min_h))
 
             -- Center the entire grid if windows are smaller than available space
             local actual_grid_w = cols * win_w + (cols - 1) * gap
@@ -162,6 +184,7 @@ return function(args)
             local val = opt.int and opt.int
                 or opt.float and opt.float
                 or opt.custom and utils.fix_color_hex(opt.custom)
+
             table.insert(opt_commands, string.format("keyword %s %s", opt.option, val))
         end
         hyprland.exec_hyprctl_batch(table.unpack(opt_commands))

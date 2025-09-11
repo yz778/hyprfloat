@@ -1,8 +1,17 @@
 -- Toggle floating mode command
 local hyprland = require("lib.hyprland")
-local config = require("lib.config")
+local utils = require("lib.utils")
+local user_config = require("lib.config")
+
+local default_config = {
+    float_mode = {
+        tiling_commands = {},
+        floating_commands = {}
+    }
+}
 
 return function(args)
+    local config = utils.deep_merge(default_config, user_config)
     local mode = args[1]
 
     local windows = hyprland.get_clients()

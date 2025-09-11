@@ -4,6 +4,17 @@ local config = require("lib.config")
 
 local utils = {}
 
+function utils.deep_merge(t1, t2)
+    for k, v in pairs(t2) do
+        if type(v) == "table" and type(t1[k]) == "table" then
+            utils.deep_merge(t1[k], v)
+        else
+            t1[k] = v
+        end
+    end
+    return t1
+end
+
 function utils.exec_cmd(cmd)
     if config.debug then print("---------\n[execute] " .. cmd) end
 
