@@ -18,7 +18,7 @@ return {
 
         options = {
             "general:col.active_border rgba(ffd700ee) rgba(ff8c00ee) 45deg",
-            "general:col.inactive_border rgba(ffd70033) rgba(ff8c0033   ) 45deg",
+            "general:col.inactive_border rgba(ffd70033) rgba(ff8c0033) 45deg",
             'general:border_size 5',
         }
     },

@@ -2,14 +2,14 @@
 
 `hyprfloat` is a Lua script that provides enhanced window management features for Hyprland, including a GNOME-style overview, easy window snapping, and a global floating mode.
 
-![demo gif](demo/demo.gif)
+https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
 
 ## Getting Started
 
 ### Prerequisites
 
-- Hyprland
-- Lua >= 5.1
+- [Hyprland](https://hypr.land/) >= 0.50
+- [Lua](https://lua.org) >= 5.1
 - [lua-posix](https://github.com/luaposix/luaposix)
 - [lua-cjson](https://github.com/mpx/lua-cjson/)
 
@@ -20,18 +20,14 @@
     yay -S lua lua-posix lua-cjson
     ```
 
-2.  Place the `hyprfloat` script somewhere in your `$PATH`. For example:
+2.  Run install script (installs to `~/.local/bin/hyprfloat`):
     ```sh
-    cd ~/.local/bin
-    curl -O https://raw.githubusercontent.com/yz778/hyprfloat/refs/heads/main/src/hyprfloat
-    chmod +x hyprfloat
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/yz778/hyprland/main/install.sh)"
     ```
 
-3.  Copy and customize the sample configuration:
+3.  Customize the [configuration file](config/hyprfloat.conf.lua):
     ```sh
-    mkdir -p ~/.config/hypr
-    cd ~/.config/hypr
-    curl -O https://raw.githubusercontent.com/yz778/hyprfloat/refs/heads/main/config/hyprfloat.conf.lua
+    ~/.config/hypr/hyprfloat.conf.lua
     ```
 
 4.  Add keybindings to your ` ~/.config/hypr/hyprland.conf` ([see below](#bindings))
