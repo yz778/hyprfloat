@@ -8,7 +8,7 @@ https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
 
 ### Prerequisites
 
-- [Lua](https://lua.org) with [lua-cjson](https://github.com/mpx/lua-cjson/), [lua-lgi](https://github.com/lgi-devs/lgi), [lua-posix](https://github.com/luaposix/luaposix)
+- [Lua](https://lua.org), [lua-cjson](https://github.com/mpx/lua-cjson/), [lua-lgi](https://github.com/lgi-devs/lgi), [lua-posix](https://github.com/luaposix/luaposix)
 - [grim-hyprland](https://github.com/eriedaberrie/grim-hyprland)
 
 ### Installation
@@ -23,20 +23,25 @@ https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/yz778/hyprland/main/install.sh)"
     ```
 
-3.  Customize theconfiguration file:
+3.  Customize the configuration file. See the [default example](config/hyprfloat.conf.lua) for details on what each setting does:
     ```sh
     ~/.config/hypr/hyprfloat.conf.lua
     ```
 
-4.  Add keybindings to your ` ~/.config/hypr/hyprland.conf` ([see below](#bindings))
+4.  Add [keybindings](#bindings) to your ` ~/.config/hypr/hyprland.conf`
 
 ## Features
 
 - **ALT-Tab Window Switching**: A window switcher with previews, MRU (Most-Recently-Used) focus, and an option to switch between windows of the same class.
+
 - **Workspace Overview**: Arranges all windows into a grid, similar to GNOME's overview.
+
 - **Float Mode**: Toggles all windows between tiling and floating, with customizable Hyprland settings for each mode.
+
 - **Window Snapping**: Snaps the active window to fractional portions of the screen.
+
 - **Window Centering**: Centers the active window, with an option to scale it.
+
 - **Multi-monitor Support**: Move windows between monitors while maintaining relative size and position.
 
 ## Commands
@@ -53,16 +58,12 @@ https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
 - `hyprfloat togglefloat [mode]`: Toggles floating mode for all windows.
 - `hyprfloat version`: Prints the version of hyprfloat.
 
-## Configuration
-
-`hyprfloat` configuration is stored in `~/.config/hypr/hyprfloat.conf.lua`. See the [example configuration file](config/hyprfloat.conf.lua) for details on what each setting does.
-
 ## Bindings
 
-Bind the `hyprfloat` commands to keybindings in your `hyprland.conf`. For example:
+Add bindings to your `hyprland.conf`, here is a fully configured example:
 
-```
-# alttab
+```ini
+# ALT-Tab / SHIFT-ALT-TAB for quick MRU switching, keep ALT held to use window switcher
 submap = alttab
 bind = SHIFT, SPACE, exec, hyprctl dispatch submap reset
 submap = reset
@@ -81,13 +82,13 @@ bind = ALT_SHIFT, TAB,            exec, hyprfloat alttab prev
 bind = ALT, GRAVE,                exec, hyprfloat alttab next sameclass
 bind = ALT_SHIFT, GRAVE,          exec, hyprfloat alttab prev sameclass
 
-# overview
+# Toggle Overview mode
 bind = $mainMod, BACKSLASH,       exec, hyprfloat overview
 
-# togglefloat
+# Toggle Floating or Tiling layout
 bind = $mainMod_SHIFT, BACKSLASH, exec, hyprfloat togglefloat
 
-# snap
+# Snap window to predefined positions (floating mode only)
 bind = $mainMod, LEFT,            exec, hyprfloat snap 0.0   0.5   0.0   1.0
 bind = $mainMod, RIGHT,           exec, hyprfloat snap 0.5   1.0   0.0   1.0
 bind = $mainMod, INSERT,          exec, hyprfloat snap 0.0   0.3   0.0   0.5
@@ -101,15 +102,12 @@ bind = $mainMod_SHIFT, HOME,      exec, hyprfloat snap 0.2   0.8   0.0   1.0
 bind = $mainMod_SHIFT, PAGE_UP,   exec, hyprfloat snap 0.7   1.0   0.0   1.0
 bind = $mainMod_SHIFT, UP,        exec, hyprfloat snap 0.0   1.0   0.0   1.0
 
-# movemon
+# Move active window between monitors
 bind = $mainMod_SHIFT, LEFT,      exec, hyprfloat movemon -1
 bind = $mainMod_SHIFT, RIGHT,     exec, hyprfloat movemon +1
 
-# center
+# Center and resize the active window (floating mode only)
 bind = $mainMod, UP,              exec, hyprfloat center 1.25
 bind = $mainMod, DOWN,            exec, hyprfloat center 0.75
 bind = $mainMod_SHIFT, DOWN,      exec, hyprfloat center 1.00
-
-# events (for debugging)
-# bind = $mainMod, E,             exec, hyprfloat events
 ```
