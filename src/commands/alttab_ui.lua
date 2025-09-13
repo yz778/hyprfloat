@@ -103,12 +103,6 @@ function alttab_ui.launch(params)
         cleanup()
     end
 
-    local function select_tile(tile)
-        shared.selected_address = tile.source.client
-        shared.activate()
-        app:quit()
-    end
-
     local function parallel_preview_capture(clients)
         local pids = {}
         local temp_files = {}
@@ -258,7 +252,9 @@ function alttab_ui.launch(params)
                     function eventbox:on_button_press_event(event)
                         if event.button == 1 then
                             curr_tile = idx
-                            select_tile(tiles[idx])
+                            update_tile_display()
+                            shared.activate()
+                            app:quit()
                         end
                         return false
                     end
