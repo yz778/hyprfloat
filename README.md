@@ -9,7 +9,7 @@ https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
 ### Prerequisites
 
 - [Lua](https://lua.org) with [lua-cjson](https://github.com/mpx/lua-cjson/), [lua-lgi](https://github.com/lgi-devs/lgi), [lua-posix](https://github.com/luaposix/luaposix)
-- [grim-hyprland](https://github.com/eriedaberrie/grim-hyprland) (for Window switching)
+- [grim-hyprland](https://github.com/eriedaberrie/grim-hyprland)
 
 ### Installation
 
@@ -32,11 +32,26 @@ https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
 
 ## Features
 
+- **ALT-Tab Window Switching**: A window switcher with previews, MRU (Most-Recently-Used) focus, and an option to switch between windows of the same class.
 - **Workspace Overview**: Arranges all windows into a grid, similar to GNOME's overview.
 - **Float Mode**: Toggles all windows between tiling and floating, with customizable Hyprland settings for each mode.
 - **Window Snapping**: Snaps the active window to fractional portions of the screen.
 - **Window Centering**: Centers the active window, with an option to scale it.
 - **Multi-monitor Support**: Move windows between monitors while maintaining relative size and position.
+
+## Commands
+
+- `hyprfloat alttab <next|prev> [sameclass]`: Switches between windows.
+  - `next`: Switches to the next window in the MRU list.
+  - `prev`: Switches to the previous window in the MRU list.
+  - `sameclass`: (Optional) Only switches between windows of the same class.
+- `hyprfloat center <scale>`: Centers the active window and optionally scales it.
+- `hyprfloat events`: (Debugging) Prints Hyprland events.
+- `hyprfloat movemon <direction>`: Moves the active window to another monitor.
+- `hyprfloat overview`: Shows the workspace overview.
+- `hyprfloat snap <x0> <x1> <y0> <y1>`: Snaps the active window to a fractional portion of the screen.
+- `hyprfloat togglefloat [mode]`: Toggles floating mode for all windows.
+- `hyprfloat version`: Prints the version of hyprfloat.
 
 ## Configuration
 
@@ -46,8 +61,8 @@ https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
 
 Bind the `hyprfloat` commands to keybindings in your `hyprland.conf`. For example:
 
-
 ```
+# alttab
 submap = alttab
 bind = SHIFT, SPACE, exec, hyprctl dispatch submap reset
 submap = reset
@@ -65,8 +80,14 @@ bind = ALT, TAB,                  exec, hyprfloat alttab next
 bind = ALT_SHIFT, TAB,            exec, hyprfloat alttab prev
 bind = ALT, GRAVE,                exec, hyprfloat alttab next sameclass
 bind = ALT_SHIFT, GRAVE,          exec, hyprfloat alttab prev sameclass
+
+# overview
 bind = $mainMod, BACKSLASH,       exec, hyprfloat overview
+
+# togglefloat
 bind = $mainMod_SHIFT, BACKSLASH, exec, hyprfloat togglefloat
+
+# snap
 bind = $mainMod, LEFT,            exec, hyprfloat snap 0.0   0.5   0.0   1.0
 bind = $mainMod, RIGHT,           exec, hyprfloat snap 0.5   1.0   0.0   1.0
 bind = $mainMod, INSERT,          exec, hyprfloat snap 0.0   0.3   0.0   0.5
@@ -79,9 +100,16 @@ bind = $mainMod_SHIFT, INSERT,    exec, hyprfloat snap 0.0   0.7   0.0   1.0
 bind = $mainMod_SHIFT, HOME,      exec, hyprfloat snap 0.2   0.8   0.0   1.0
 bind = $mainMod_SHIFT, PAGE_UP,   exec, hyprfloat snap 0.7   1.0   0.0   1.0
 bind = $mainMod_SHIFT, UP,        exec, hyprfloat snap 0.0   1.0   0.0   1.0
+
+# movemon
 bind = $mainMod_SHIFT, LEFT,      exec, hyprfloat movemon -1
 bind = $mainMod_SHIFT, RIGHT,     exec, hyprfloat movemon +1
+
+# center
 bind = $mainMod, UP,              exec, hyprfloat center 1.25
 bind = $mainMod, DOWN,            exec, hyprfloat center 0.75
 bind = $mainMod_SHIFT, DOWN,      exec, hyprfloat center 1.00
+
+# events (for debugging)
+# bind = $mainMod, E,             exec, hyprfloat events
 ```

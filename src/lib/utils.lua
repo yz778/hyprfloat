@@ -17,13 +17,13 @@ function utils.deep_merge(t1, t2)
 end
 
 function utils.exec_cmd(cmd)
-    if config.debug then print("---------\n[execute] " .. cmd) end
+    utils.debug("[execute] " .. cmd)
 
     local handle = io.popen(cmd)
     local result = handle and handle:read("*a") or ""
     if handle then handle:close() end
 
-    if config.debug then print("[result ] " .. result) end
+    utils.debug("[result ] " .. result)
 
     return result
 end
@@ -107,6 +107,8 @@ function utils.parallel_map(items, func, max_concurrent)
 end
 
 function utils.debug(message)
+    if not config.debug then return nil end
+
     local file = io.open(log_file_path, "a")
     if file then
         file:write(string.format("[%s] %s\n", os.date("%Y-%m-%d %H:%M:%S"), message))

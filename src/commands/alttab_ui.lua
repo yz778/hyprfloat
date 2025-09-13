@@ -10,11 +10,11 @@ local config = require('lib.config')
 
 local default_config = {
     alttab = {
-        -- `altkey_wait_ms`: How long to wait before checking if the ALT key is held down.
-        -- If this is too short, the check may incorrectly report that ALT is not pressed.
+        -- Milliseconds to wait before checking if the ALT key is held down.
+        -- If this is too short, the check may incorrectly report that ALT is held down.
         altkey_wait_ms = 50,
 
-        -- `mainwindow_wait_ms`: How long to wait before opening the main selector window.
+        -- Milliseconds to wait before opening the main selector window.
         mainwindow_wait_ms = 100,
 
         -- Number of concurrent grim processes to run

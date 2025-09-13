@@ -3,15 +3,17 @@ local lib = {}
 local function print_help()
     print("Usage: hyprfloat <command> [args...]\n")
     print("Commands:\n")
-    print("  center [scale]            - Center active window with scaling")
-    print("  events                    - Listen to Hyprland socket events (for debugging)")
-    print("  movemon [direction]       - Move active window to next monitor")
-    print("  overview                  - GNOME-style overview mode")
-    print("  snap [x0] [x1] [y0] [y1]  - Snap window to screen fraction")
-    print("  togglefloat (mode)        - Toggle floating mode for all windows (on|off|auto)")
-    print("  version                   - Print version number")
-    print("  alttab [direction]     - Window switcher")
+    print("  alttab <next|prev> [sameclass]     - Switches between windows.")
+    print("  center <scale>                     - Centers the active window and optionally scales it.")
+    print("  events                             - (Debugging) Prints all Hyprland events.")
+    print("  movemon <direction>                - Moves the active window to another monitor.")
+    print("  overview                           - Shows the workspace overview.")
+    print("  snap <x0> <x1> <y0> <y1>           - Snaps the active window to a fractional portion of the screen.")
+    print("  togglefloat [mode]                 - Toggles floating mode for all windows.")
+    print("  version                            - Prints the version of hyprfloat.")
 end
+
+
 
 function lib.run(args)
     if #args < 1 then

@@ -1,4 +1,3 @@
-local posix = require("posix")
 local hyprland = require('lib.hyprland')
 local utils = require('lib.utils')
 
