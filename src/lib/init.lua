@@ -13,8 +13,6 @@ local function print_help()
     print("  version                            - Prints the version of hyprfloat.")
 end
 
-
-
 function lib.run(args)
     if #args < 1 then
         print_help()
