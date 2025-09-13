@@ -20,7 +20,7 @@ https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
 
 2.  Run the install script
     ```sh
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/yz778/hyprland/main/install.sh)"
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/yz778/hyprfloat/main/install.sh)"
     ```
 
 3.  Customize the configuration file. See the [default example](config/hyprfloat.conf.lua) for details on what each setting does:
