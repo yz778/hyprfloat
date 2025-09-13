@@ -1,23 +1,17 @@
 #!/bin/sh
 
+set -e
+
 # ANSI color codes (set blank if not in a TTY)
 if [ -t 1 ]; then
-    BLUE='\033[0;34m'
     GREEN='\033[0;32m'
     RED='\033[0;31m'
-    WHITE='\033[0;37m'
-    YELLOW='\033[1;33m'
     RESET='\033[0m'
 else
-    BLUE=''
     GREEN=''
     RED=''
-    WHITE=''
-    YELLOW=''
     RESET=''
 fi
-
-set -e
 
 TAG="${TAG:-stable}"
 INSTALL_HOME="${INSTALL_HOME:-$HOME/.local/share}"

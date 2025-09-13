@@ -2,15 +2,13 @@ local hyprland = require("lib.hyprland")
 local utils = require("lib.utils")
 
 return function(args)
-    utils.check_argcount(#args, 1, "Usage: hyprfloat center <scale>")
+    utils.check_args(#args ~= 1, "Usage: hyprfloat center <scale>")
 
     local scale = tonumber(args[1])
-    if not scale then
-        error("Scale must be a number")
-    end
+    utils.check_args(not scale, "Scale must be a number")
 
     local ctx = hyprland.get_active_context()
-    if not ctx then error("No active window/monitor context") end
+    utils.check_args(not ctx, "No active window/monitor context")
 
     local min_scale = 0.25
     local win = ctx.window

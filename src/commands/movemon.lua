@@ -2,17 +2,16 @@ local hyprland = require("lib.hyprland")
 local utils = require("lib.utils")
 
 return function(args)
-    utils.check_argcount(#args, 1, "Usage: hyprfloat movemon [direction]")
+    utils.check_args(#args ~= 1, "Usage: hyprfloat movemon [direction]")
 
-    local direction = args[1]
+    local direction = tonumber(args[1])
+    utils.check_args(not direction, "Direction must be a number -1 or +1")
 
     local old = hyprland.get_active_context()
-    if not old then error("No active window") end
-
     local monitors = hyprland.get_monitors()
     local moncount = #monitors
 
-    local nextmon = old.window.monitor + tonumber(direction)
+    local nextmon = old.window.monitor + direction
     if nextmon < 0 then nextmon = moncount - 1 end
     if nextmon >= moncount then nextmon = 0 end
 

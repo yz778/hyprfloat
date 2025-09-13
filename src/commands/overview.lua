@@ -11,25 +11,34 @@ local default_config = {
         target_ratio = 1.6, -- 16:10
         min_w = 160,
         min_h = 100,
+
         -- Grid layout configuration
         sqrt_multiplier = 1.4,  -- Multiplier for calculating optimal grid dimensions
         max_cols = 5,           -- Maximum number of columns in grid
         spacing_factor = 0.024, -- Factor for calculating gap size based on screen dimensions
         min_gap = 8,            -- Minimum gap between windows
         margin_multiplier = 2,  -- Multiplier for margin (gap * margin_multiplier)
-        -- Aspect ratio constraints
-        max_ratio = 2.2,        -- Maximum width/height ratio before adjusting
-        min_ratio = 0.9,        -- Minimum width/height ratio before adjusting
 
-        options = {},
+        -- Aspect ratio constraints
+        max_ratio = 2.2, -- Maximum width/height ratio before adjusting
+        min_ratio = 0.9, -- Minimum width/height ratio before adjusting
+
+        -- These options are set when entering Overview mode. When leaving Overview mode, their
+        -- original values will be restored.
+        options = {
+            "general:col.active_border rgba(ffd700ee) rgba(ff8c00ee) 45deg",
+            "general:col.inactive_border rgba(ffd70033) rgba(ff8c0033) 45deg",
+            'general:border_size 5',
+        }
     },
 }
+
+local socket_path = "/tmp/hyprfloat/overview.sock"
 
 return function(args)
     local cfg = utils.deep_merge(default_config, config).overview
 
     -- if another instance is running, untoggle the overview
-    local socket_path = "/tmp/hyprfloat_overview.sock"
     local sockfd = posix.socket(posix.AF_UNIX, posix.SOCK_STREAM, 0)
     local addr = { family = posix.AF_UNIX, path = socket_path }
     if posix.access(socket_path, "f") then
@@ -207,6 +216,7 @@ return function(args)
 
         if activewin_addr then
             table.insert(commands, string.format("dispatch focuswindow address:%s", activewin_addr))
+            table.insert(commands, string.format("dispatch alterzorder top", activewin_addr))
         end
 
         hyprland.exec_hyprctl_batch(table.unpack(commands))

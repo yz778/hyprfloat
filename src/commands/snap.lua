@@ -2,19 +2,17 @@ local hyprland = require("lib.hyprland")
 local utils = require("lib.utils")
 
 return function(args)
-    utils.check_argcount(#args, 4, "Usage: hyprfloat snap <x0_frac> <x1_frac> <y0_frac> <y1_frac>")
+    utils.check_args(#args ~= 4, "Usage: hyprfloat snap <x0_frac> <x1_frac> <y0_frac> <y1_frac>")
 
     local x0_frac = tonumber(args[1])
     local x1_frac = tonumber(args[2])
     local y0_frac = tonumber(args[3])
     local y1_frac = tonumber(args[4])
 
-    if not (x0_frac and x1_frac and y0_frac and y1_frac) then
-        error("All fractions must be numbers")
-    end
+    utils.check_args(not (x0_frac and x1_frac and y0_frac and y1_frac), "All arguments must be numbers")
 
     local ctx = hyprland.get_active_context()
-    if not ctx then error("No active window/monitor context") end
+    utils.check_args(not ctx, "No active window/monitor context")
 
     local effective_area = ctx.effective_area
 
