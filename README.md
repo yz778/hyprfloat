@@ -34,6 +34,8 @@ https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
 
 - **ALT-Tab Window Switching**: A window switcher with previews, MRU (Most-Recently-Used) focus, and an option to switch between windows of the same class.
 
+https://github.com/user-attachments/assets/469a2498-d0a7-4cb5-9580-57418d866e5f
+
 - **Workspace Overview**: Arranges all windows into a grid, similar to GNOME's overview.
 
 - **Float Mode**: Toggles all windows between tiling and floating, with customizable Hyprland settings for each mode.
