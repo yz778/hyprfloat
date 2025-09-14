@@ -50,6 +50,7 @@ return function(args)
             for _, wsid in ipairs(cfg.groups[nextgroup]) do
                 table.insert(commands, "dispatch workspace " .. wsid)
             end
+            table.insert(commands, "dispatch focusmonitor " .. active_workspace.monitor)
             hyprland.exec_hyprctl_batch(table.unpack(commands))
 
             -- run custom commands
