@@ -80,12 +80,11 @@ return {
 
         -- Display and monitor
         default_monitor_index = 0,
-        screen_width_ratio = 0.6,
 
         -- Tile dimensions
-        base_tile_size = 120,
-        selected_tile_size = 140,
-        tile_container_size = 160,
+        base_tile_size = 240,
+        selected_tile_size = 280,
+        tile_container_size = 300,
 
         -- Grid spacing
         grid_row_spacing = 5,
@@ -124,5 +123,20 @@ return {
                 font-size: 16px;
             }
         ]]
+    },
+
+    workspacegroup = {
+        icons = {
+            active = "  ",
+            default = "  ",
+        },
+        groups = {
+            { 1, 2, 3 }, -- monitor 1
+            { 4, 5, 6 }, -- monitor 2
+            { 7, 8, 9 }, -- monitor 3
+        },
+        commands = {
+            "pkill -RTMIN+8 waybar"
+        }
     }
 }

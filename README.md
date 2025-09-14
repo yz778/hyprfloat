@@ -1,6 +1,6 @@
 # hyprfloat
 
-`hyprfloat` is a Lua script that provides enhanced window management features for [Hyprland](https://hypr.land), including a GNOME-style overview, easy window snapping, and a global floating mode.
+`hyprfloat` is a Lua script that provides enhanced window management features for [Hyprland](https://hypr.land), including a GNOME-style overview, floating window snapping, and more.
 
 https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
 
@@ -23,10 +23,11 @@ https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/yz778/hyprfloat/main/install.sh)"
     ```
 
-3.  Customize the configuration file. See the [default example](config/hyprfloat.conf.lua) for details on what each setting does:
+3.  (Optional) Install and customize the [default configuration](src/config/default.conf.lua) file.
     ```sh
-    ~/.config/hypr/hyprfloat.conf.lua
+    hyprfloat install-config
     ```
+    The configuration will be placed at `~/.config/hypr/hyprfloat.config.lua`.
 
 4.  Add [keybindings](#bindings) to your ` ~/.config/hypr/hyprland.conf`
 
@@ -46,19 +47,29 @@ https://github.com/user-attachments/assets/469a2498-d0a7-4cb5-9580-57418d866e5f
 
 - **Multi-monitor Support**: Move windows between monitors while maintaining relative size and position.
 
+- **Workspace Groups**: Group workspaces together and cycle through them. This is useful for multi-monitor setups.
+
 ## Commands
 
 - `hyprfloat alttab <next|prev> [sameclass]`: Switches between windows.
-  - `next`: Switches to the next window in the MRU list.
-  - `prev`: Switches to the previous window in the MRU list.
-  - `sameclass`: (Optional) Only switches between windows of the same class.
+  - **next**: Switches to the next window in the MRU list.
+  - **prev**: Switches to the previous window in the MRU list.
+  - **sameclass**: (Optional) Only switches between windows of the same class.
 - `hyprfloat center <scale>`: Centers the active window and optionally scales it.
-- `hyprfloat events`: (Debugging) Prints Hyprland events.
+- `hyprfloat events`: Prints Hyprland events.
+- `hyprfloat install-config`: Installs the default configuration.
 - `hyprfloat movemon <direction>`: Moves the active window to another monitor.
 - `hyprfloat overview`: Shows the workspace overview.
 - `hyprfloat snap <x0> <x1> <y0> <y1>`: Snaps the active window to a fractional portion of the screen.
 - `hyprfloat togglefloat [mode]`: Toggles floating mode for all windows.
+  - **on**: (Optional) Set all windows to floating
+  - **off**: (Optional) Set all windows to tiling
+  - **(default)**: Toggles between floating and tiling
 - `hyprfloat version`: Prints the version of hyprfloat.
+- `hyprfloat workspacegroup <next|prev|status>`: Move between groups of workspaces or print current status.
+  - **next**: Switch to the next workspace group.
+  - **prev**: Switch to the previous workspace group.
+  - **status**: Print the workspace group status, e.g. [for using in Waybar](#tips-and-tricks)
 
 ## Bindings
 
@@ -112,4 +123,42 @@ bind = $mainMod_SHIFT, RIGHT,     exec, hyprfloat movemon +1
 bind = $mainMod, UP,              exec, hyprfloat center 1.25
 bind = $mainMod, DOWN,            exec, hyprfloat center 0.75
 bind = $mainMod_SHIFT, DOWN,      exec, hyprfloat center 1.00
+
+# Cycle through workspace groups
+bind = $mainMod_CTRL, LEFT,       exec, hyprfloat workspacegroup prev
+bind = $mainMod_CTRL, RIGHT,      exec, hyprfloat workspacegroup next
+```
+
+## Tips and Tricks
+
+Here is a sample configuration for integrating Workspace Groups with Waybar.
+
+~/.config/waybar/config.jsonc
+```json
+"custom/workspacegroup": {
+  "exec": "hyprfloat workspacegroup status",
+  "interval": "once",
+  "format": "{text}",
+  "on-click": "hyprfloat workspacegroup next",
+  "tooltip": false,
+  "signal": 8
+}
+```
+~/.config/hypr/hyprfloat.config.lua
+
+```lua
+workspacegroup = {
+    icons = {
+        active = "  ",
+        default = "  ",
+    },
+    groups = {
+        { 1, 2, 3 }, -- monitor 1
+        { 4, 5, 6 }, -- monitor 2
+        { 7, 8, 9 }, -- monitor 3
+    },
+    commands = {
+        "pkill -RTMIN+8 waybar"
+    }
+}
 ```

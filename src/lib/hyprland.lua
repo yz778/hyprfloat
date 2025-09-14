@@ -9,8 +9,12 @@ function hyprland.exec_hyprctl_batch(...)
     utils.exec_cmd(cmd)
 end
 
-function hyprland.get_active_window()
+function hyprland.get_activewindow()
     return utils.get_cmd_json("hyprctl activewindow -j")
+end
+
+function hyprland.get_activeworkspace()
+    return utils.get_cmd_json("hyprctl activeworkspace -j")
 end
 
 function hyprland.get_monitors()
@@ -131,7 +135,7 @@ function hyprland.clamp_window_to_area(win_x, win_y, win_w, win_h, effective_are
 end
 
 function hyprland.get_active_context()
-    local activewindow = hyprland.get_active_window()
+    local activewindow = hyprland.get_activewindow()
     if not activewindow then return nil end
 
     local monitors = hyprland.get_monitors()

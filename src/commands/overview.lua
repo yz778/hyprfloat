@@ -5,38 +5,10 @@ local posix = require("posix")
 local signal = require("posix.signal")
 local poll = require("posix.poll")
 
-local default_config = {
-    overview = {
-        -- Overview window sizes
-        target_ratio = 1.6, -- 16:10
-        min_w = 160,
-        min_h = 100,
-
-        -- Grid layout configuration
-        sqrt_multiplier = 1.4,  -- Multiplier for calculating optimal grid dimensions
-        max_cols = 5,           -- Maximum number of columns in grid
-        spacing_factor = 0.024, -- Factor for calculating gap size based on screen dimensions
-        min_gap = 8,            -- Minimum gap between windows
-        margin_multiplier = 2,  -- Multiplier for margin (gap * margin_multiplier)
-
-        -- Aspect ratio constraints
-        max_ratio = 2.2, -- Maximum width/height ratio before adjusting
-        min_ratio = 0.9, -- Minimum width/height ratio before adjusting
-
-        -- These options are set when entering Overview mode. When leaving Overview mode, their
-        -- original values will be restored.
-        options = {
-            "general:col.active_border rgba(ffd700ee) rgba(ff8c00ee) 45deg",
-            "general:col.inactive_border rgba(ffd70033) rgba(ff8c0033) 45deg",
-            'general:border_size 5',
-        }
-    },
-}
-
 local socket_path = "/tmp/hyprfloat/overview.sock"
 
 return function(args)
-    local cfg = utils.deep_merge(default_config, config).overview
+    local cfg = config.overview
 
     -- if another instance is running, untoggle the overview
     local sockfd = posix.socket(posix.AF_UNIX, posix.SOCK_STREAM, 0)
@@ -46,7 +18,7 @@ return function(args)
         if ok then
             posix.send(sockfd, "toggle\n")
             posix.close(sockfd)
-            print("Sent toggle to running overview instance.")
+            utils.debug("Another instance is running, sending toggle message.")
             return
         else
             os.remove(socket_path)
@@ -54,7 +26,7 @@ return function(args)
     end
     posix.close(sockfd)
 
-    -- create new socket listern
+    -- create new socket listener
     local listenfd = posix.socket(posix.AF_UNIX, posix.SOCK_STREAM, 0)
     assert(listenfd, "Failed to create control socket")
     local ok, err = posix.bind(listenfd, addr)
@@ -79,7 +51,7 @@ return function(args)
     hyprland.exec_hyprctl_batch(table.unpack(opt_commands))
 
     -- Save all window states
-    local active_window = hyprland.get_active_window()
+    local active_window = hyprland.get_activewindow()
     local orig_windows = {}
     for _, win in ipairs(clients) do
         orig_windows[win.address] = win
@@ -94,6 +66,19 @@ return function(args)
                 table.insert(ws_windows, win)
             end
         end
+
+        -- Sort windows by workspace, Y, X, address for stable sorting
+        table.sort(ws_windows, function(a, b)
+            if a.workspace.id ~= b.workspace.id then
+                return a.workspace.id < b.workspace.id
+            elseif a.at[2] ~= b.at[2] then
+                return a.at[2] < b.at[2]
+            elseif a.at[1] ~= b.at[1] then
+                return a.at[1] < b.at[1]
+            else
+                return a.address < b.address
+            end
+        end)
 
         local wincount = #ws_windows
         if wincount > 0 then
@@ -172,17 +157,23 @@ return function(args)
                 local win_x = math.floor(area.x + margin + grid_offset_x + col * (win_w + gap))
                 local win_y = math.floor(area.y + margin + grid_offset_y + row * (win_h + gap))
 
-                -- Float and move/resize with smooth batch operations
+                -- Have to focus the window to make sure we're in the right workspace
                 table.insert(grid_commands, string.format("dispatch focuswindow address:%s", win.address))
+
+                -- Float and move/resize with smooth batch operations
                 if not win.floating then
-                    table.insert(grid_commands, string.format("dispatch togglefloat address:%s", win.address))
+                    table.insert(grid_commands, string.format("dispatch togglefloating address:%s", win.address))
                 end
 
                 table.insert(grid_commands, string.format("dispatch moveactive exact %d %d", win_x, win_y))
                 table.insert(grid_commands, string.format("dispatch resizeactive exact %d %d", win_w, win_h))
             end
         end
+
+        ::continue::
     end
+
+    -- restore original active window focus
     table.insert(grid_commands, string.format("dispatch focuswindow address:%s", active_window.address))
     hyprland.exec_hyprctl_batch(table.unpack(grid_commands))
 
@@ -230,9 +221,12 @@ return function(args)
             posix.close(listenfd)
             os.remove(socket_path)
         end
+
         if hyprsock then
             posix.close(hyprsock)
         end
+
+        utils.debug("Exiting overview mode")
         os.exit(0)
     end
 
@@ -245,7 +239,8 @@ return function(args)
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    print("Overview mode active. Waiting for focus change or toggle...")
+    utils.debug("-----")
+    utils.debug("Overview mode active")
 
     local done = false
     while not done and not interrupted do
@@ -271,7 +266,7 @@ return function(args)
                 local msg = posix.recv(conn, 1024)
                 posix.close(conn)
                 if msg and msg:match("toggle") then
-                    print("Received toggle message, exiting overview mode.")
+                    utils.debug("Received toggle message, exiting overview mode.")
                     cleanup_and_exit()
                     done = true
                 end
@@ -279,6 +274,5 @@ return function(args)
         end
     end
 
-    print("Exiting overview mode.")
     cleanup_and_exit()
 end

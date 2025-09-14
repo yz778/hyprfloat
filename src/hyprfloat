@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 
-local function get_real_script_dir()
+function get_script_root()
     local p = debug.getinfo(1, "S").source:sub(2)
     local h = io.popen("readlink -f " .. p)
     local r = h:read("*l")
@@ -8,7 +8,7 @@ local function get_real_script_dir()
     return r:match("(.*/)") or "./"
 end
 
-local script_dir = get_real_script_dir()
+local script_dir = get_script_root()
 package.path = script_dir .. "?.lua;" .. script_dir .. "?/init.lua;" .. package.path
 
 -- Load and run the main library

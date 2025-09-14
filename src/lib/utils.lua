@@ -5,26 +5,10 @@ local config = require("lib.config")
 local utils = {}
 local log_file_path = "/tmp/hyprfloat/debug.log"
 
-function utils.deep_merge(t1, t2)
-    for k, v in pairs(t2) do
-        if type(v) == "table" and type(t1[k]) == "table" then
-            utils.deep_merge(t1[k], v)
-        else
-            t1[k] = v
-        end
-    end
-    return t1
-end
-
 function utils.exec_cmd(cmd)
-    utils.debug("[execute] " .. cmd)
-
     local handle = io.popen(cmd)
     local result = handle and handle:read("*a") or ""
     if handle then handle:close() end
-
-    utils.debug("[result ] " .. result)
-
     return result
 end
 
@@ -65,7 +49,9 @@ function utils.stringify(o, indent)
 end
 
 function utils.dump(o)
-    print(utils.stringify(o))
+    local str = utils.stringify(o)
+    print(str)
+    utils.debug(str)
     os.exit(1)
 end
 
