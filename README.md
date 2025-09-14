@@ -131,7 +131,29 @@ bind = $mainMod_CTRL, RIGHT,      exec, hyprfloat workspacegroup next
 
 ## Tips and Tricks
 
-Here is a sample configuration for integrating Workspace Groups with Waybar.
+Here is a sample configuration that shows how I synchronize workspace changes across my three monitors.
+
+~/.config/hypr/hyprland.conf
+```ini
+monitor=DP-1,1280x1024@75,0x0,1
+monitor=DP-3,2560x1440@143,1280x0,1
+monitor=HDMI-A-1,1280x1024@75,3840x0,1
+
+# group 1
+workspace=1, monitor:DP-1,     persistent:true
+workspace=2, monitor:DP-3,     persistent:true
+workspace=3, monitor:HDMI-A-1, persistent:true
+
+# group 2
+workspace=4, monitor:DP-1,     persistent:true
+workspace=5, monitor:DP-3,     persistent:true
+workspace=6, monitor:HDMI-A-1, persistent:true
+
+# group 3
+workspace=7, monitor:DP-1,     persistent:true
+workspace=8, monitor:DP-3,     persistent:true
+workspace=9, monitor:HDMI-A-1, persistent:true
+```
 
 ~/.config/waybar/config.jsonc
 ```json
@@ -144,8 +166,8 @@ Here is a sample configuration for integrating Workspace Groups with Waybar.
   "signal": 8
 }
 ```
-~/.config/hypr/hyprfloat.config.lua
 
+~/.config/hypr/hyprfloat.config.lua
 ```lua
 workspacegroup = {
     icons = {
