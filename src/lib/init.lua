@@ -6,11 +6,12 @@ local function print_help()
     print("  alttab <next|prev> [sameclass]     - Switches between windows.")
     print("  center <scale>                     - Centers the active window and optionally scales it.")
     print("  events                             - (Debugging) Prints all Hyprland events.")
+    print("  install-config                     - Copies the default configuration file to your config directory.")
     print("  movemon <direction>                - Moves the active window to another monitor.")
     print("  overview                           - Shows the workspace overview.")
     print("  snap <x0> <x1> <y0> <y1>           - Snaps the active window to a fractional portion of the screen.")
     print("  togglefloat [mode]                 - Toggles floating mode for all windows.")
-    print("  install-config                     - Copies the default configuration file to your config directory.")
+    print("  workspacegroup [next|prev|status]  - Move between groups of workspaces or print current status.")
     print("  version                            - Prints the version of hyprfloat.")
 end
 

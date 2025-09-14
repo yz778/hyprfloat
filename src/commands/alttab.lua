@@ -51,14 +51,14 @@ return function(args)
     utils.check_args(#args < 1, "Usage: hyprfloat alttab <next|prev> [sameclass]")
     local action = args[1]
     local valid = { next = true, prev = true }
-    utils.check_args(not valid[action], "Invalid first argument, next or prev expected")
+    utils.check_args(not valid[action], "Invalid first argument")
 
     local has_sameclass = args[2] == "sameclass"
 
     -- Get and filter clients
     local clients = hyprland.get_clients()
     if has_sameclass then
-        local active_window = hyprland.get_active_window()
+        local active_window = hyprland.get_activewindow()
         local active_class = active_window and active_window.class
         if active_class then
             local filtered_clients = {}

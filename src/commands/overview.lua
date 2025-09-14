@@ -51,7 +51,7 @@ return function(args)
     hyprland.exec_hyprctl_batch(table.unpack(opt_commands))
 
     -- Save all window states
-    local active_window = hyprland.get_active_window()
+    local active_window = hyprland.get_activewindow()
     local orig_windows = {}
     for _, win in ipairs(clients) do
         orig_windows[win.address] = win

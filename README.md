@@ -114,4 +114,8 @@ bind = $mainMod_SHIFT, RIGHT,     exec, hyprfloat movemon +1
 bind = $mainMod, UP,              exec, hyprfloat center 1.25
 bind = $mainMod, DOWN,            exec, hyprfloat center 0.75
 bind = $mainMod_SHIFT, DOWN,      exec, hyprfloat center 1.00
+
+# Cycle through workspace groups
+bind = $mainMod_CTRL, LEFT,       exec, hyprfloat workspacegroup prev
+bind = $mainMod_CTRL, RIGHT,      exec, hyprfloat workspacegroup next
 ```

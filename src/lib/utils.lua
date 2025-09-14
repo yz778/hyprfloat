@@ -49,7 +49,9 @@ function utils.stringify(o, indent)
 end
 
 function utils.dump(o)
-    print(utils.stringify(o))
+    local str = utils.stringify(o)
+    print(str)
+    utils.debug(str)
     os.exit(1)
 end
 

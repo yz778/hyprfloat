@@ -123,5 +123,20 @@ return {
                 font-size: 16px;
             }
         ]]
+    },
+
+    workspacegroup = {
+        icons = {
+            active = "  ",
+            default = "  ",
+        },
+        groups = {
+            { 1, 2, 3 }, -- monitor 1
+            { 4, 5, 6 }, -- monitor 2
+            { 7, 8, 9 }, -- monitor 3
+        },
+        commands = {
+            "pkill -RTMIN+8 waybar"
+        }
     }
 }
