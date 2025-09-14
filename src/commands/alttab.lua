@@ -2,63 +2,10 @@ local hyprland = require('lib.hyprland')
 local utils = require('lib.utils')
 
 local shared = {}
-local mru_file = "/tmp/hyprfloat/alttab_mru.txt"
 
 shared.selected_address = nil
 
-function shared.mru_load(file_path)
-    local mru = {}
-    local file = io.open(file_path, "r")
-    if file then
-        for line in file:lines() do
-            table.insert(mru, line)
-        end
-        file:close()
-    end
-
-    return mru
-end
-
-function shared.mru_save(file_path, mru_list)
-    local file = io.open(file_path, "w")
-    if file then
-        for _, address in ipairs(mru_list) do
-            file:write(address .. "\n")
-        end
-        file:close()
-    end
-end
-
-function shared.mru_update(mru_list, selected_address)
-    for i, address in ipairs(mru_list) do
-        if address == selected_address then
-            table.remove(mru_list, i)
-            break
-        end
-    end
-
-    table.insert(mru_list, 1, selected_address)
-    while #mru_list > 2 do
-        table.remove(mru_list)
-    end
-    return mru_list
-end
-
-function shared.mru_sort(clients, mru_list)
-    local mru_map = {}
-    for i, address in ipairs(mru_list) do
-        mru_map[address] = i
-    end
-    table.sort(clients, function(a, b)
-        local a_rank = mru_map[a.address] or 1000000 + a.focusHistoryID
-        local b_rank = mru_map[b.address] or 1000000 + b.focusHistoryID
-        return a_rank < b_rank
-    end)
-    return clients
-end
-
-function shared.mru_apply_direction(clients, mru_list, direction)
-    clients = shared.mru_sort(clients, mru_list)
+function shared.sort_and_apply_direction(clients, direction)
     local clientcount = #clients
 
     if clientcount <= 1 then
@@ -66,13 +13,23 @@ function shared.mru_apply_direction(clients, mru_list, direction)
     end
 
     if direction == "next" then
-        if clientcount > 1 then
-            local next_client = table.remove(clients, 2)
-            table.insert(clients, 1, next_client)
-        end
+        -- Sort by focusHistoryID ascending (oldest focus first, so next in sequence comes first)
+        table.sort(clients, function(a, b)
+            return a.focusHistoryID < b.focusHistoryID
+        end)
     elseif direction == "prev" then
-        local prev_client = table.remove(clients, clientcount)
-        table.insert(clients, 1, prev_client)
+        -- Sort by focusHistoryID descending (newest focus first, so prev in sequence comes first)
+        table.sort(clients, function(a, b)
+            return a.focusHistoryID > b.focusHistoryID
+        end)
+    end
+
+    -- Always swap the first two items (two most relevant windows for the direction)
+    if clientcount >= 2 then
+        local first = clients[1]
+        local second = clients[2]
+        clients[1] = second
+        clients[2] = first
     end
 
     return clients
@@ -81,9 +38,6 @@ end
 function shared.activate()
     local address = shared.selected_address
     utils.debug("Activating " .. address)
-    local mru = shared.mru_load(mru_file)
-    mru = shared.mru_update(mru, address)
-    shared.mru_save(mru_file, mru)
     hyprland.exec_hyprctl_batch(
         string.format("dispatch focuswindow address:%s", address),
         "dispatch alterzorder top"
@@ -100,9 +54,6 @@ return function(args)
     utils.check_args(not valid[action], "Invalid first argument, next or prev expected")
 
     local has_sameclass = args[2] == "sameclass"
-    if has_sameclass then
-        mru_file = mru_file:gsub("%.txt", "_sameclass.txt")
-    end
 
     -- Get and filter clients
     local clients = hyprland.get_clients()
@@ -120,16 +71,14 @@ return function(args)
         end
     end
 
-    -- Load MRU and apply direction
-    local mru = shared.mru_load(mru_file)
-    clients = shared.mru_apply_direction(clients, mru, action)
+    -- Sort by focus history and apply direction
+    clients = shared.sort_and_apply_direction(clients, action)
     shared.selected_address = clients[1].address
 
     -- UI Launcher Mode: Launch the full UI
     local alttab_ui = require('commands.alttab_ui')
     alttab_ui.launch({
         clients = clients,
-        mru_file = mru_file,
         shared = shared
     })
 end
