@@ -26,7 +26,8 @@ function lib.run(args)
 
     local ok, handler_or_error = pcall(require, "commands." .. command)
     if not ok then
-        if string.match(handler_or_error, "module 'commands%." .. command .. "'") then
+        utils.debug(handler_or_error)
+        if string.match(handler_or_error, "module 'commands%." .. command .. "' not found") then
             print("Invalid command: " .. command)
         else
             print(handler_or_error)
