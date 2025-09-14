@@ -66,20 +66,7 @@ install_files() {
     printf "... ${GREEN}OK${RESET}\n"
 }
 
-check_config() {
-    local CONFIG_FILE=$CONFIG_HOME/hyprfloat.conf.lua
-    if ! test -e "$CONFIG_FILE"; then
-        printf " - Copy sample configuration to $CONFIG_FILE? ${YELLOW}[Y/n]${RESET} "
-        read -r answer
-        case "$answer" in
-        [Yy]* | "")
-            printf " - Installing $CONFIG_FILE"
-            cp "$TMP_DIR/config/hyprfloat.conf.lua" "$CONFIG_FILE"
-            printf " ... ${GREEN}OK${RESET}\n"
-            ;;
-        esac
-    fi
-}
+
 
 check_version() {
     printf " - Verifying"
@@ -103,6 +90,10 @@ echo "Installing hyprfloat"
 check_prerequisites
 download
 install_files
-check_config
 check_version
 echo "Done"
+
+echo "
+To get started, you can install the default configuration by running:
+    hyprfloat install-config
+"

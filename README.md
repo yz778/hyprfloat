@@ -1,6 +1,6 @@
 # hyprfloat
 
-`hyprfloat` is a Lua script that provides enhanced window management features for [Hyprland](https://hypr.land), including a GNOME-style overview, easy window snapping, and a global floating mode.
+`hyprfloat` is a Lua script that provides enhanced window management features for [Hyprland](https://hypr.land), including a GNOME-style overview, floating window snapping, and more.
 
 https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
 
@@ -23,10 +23,11 @@ https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/yz778/hyprfloat/main/install.sh)"
     ```
 
-3.  Customize the configuration file. See the [default example](config/hyprfloat.conf.lua) for details on what each setting does:
+3.  (Optional) Install the default configuration file. You can customize it after installation.
     ```sh
-    ~/.config/hypr/hyprfloat.conf.lua
+    hyprfloat install-config
     ```
+    The configuration will be placed at `~/.config/hyprfloat/config.lua`.
 
 4.  Add [keybindings](#bindings) to your ` ~/.config/hypr/hyprland.conf`
 
@@ -48,6 +49,7 @@ https://github.com/user-attachments/assets/469a2498-d0a7-4cb5-9580-57418d866e5f
 
 ## Commands
 
+- `hyprfloat install-config`: Copies the default configuration file to `~/.config/hyprfloat/config.lua`.
 - `hyprfloat alttab <next|prev> [sameclass]`: Switches between windows.
   - `next`: Switches to the next window in the MRU list.
   - `prev`: Switches to the previous window in the MRU list.

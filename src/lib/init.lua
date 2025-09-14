@@ -10,6 +10,7 @@ local function print_help()
     print("  overview                           - Shows the workspace overview.")
     print("  snap <x0> <x1> <y0> <y1>           - Snaps the active window to a fractional portion of the screen.")
     print("  togglefloat [mode]                 - Toggles floating mode for all windows.")
+    print("  install-config                     - Copies the default configuration file to your config directory.")
     print("  version                            - Prints the version of hyprfloat.")
 end
 
@@ -25,8 +26,11 @@ function lib.run(args)
 
     local ok, handler_or_error = pcall(require, "commands." .. command)
     if not ok then
-        utils.debug(handler_or_error)
-        print("Invalid command: " .. command)
+        if string.match(handler_or_error, "module 'commands%." .. command .. "'") then
+            print("Invalid command: " .. command)
+        else
+            print(handler_or_error)
+        end
         os.exit(1)
     end
 

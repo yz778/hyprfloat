@@ -1,47 +1,9 @@
 local hyprland = require("lib.hyprland")
 local utils = require("lib.utils")
-local user_config = require("lib.config")
-
-local default_config = {
-    float_mode = {
-        -- These hyprctl commands are run when entering floating mode
-        tiling_commands = {
-            'keyword general:col.active_border rgba(33ccffee) rgba(00ff99ee) 45deg',
-            'keyword general:col.inactive_border rgba(595959aa)',
-            'keyword general:gaps_in 2',
-            'keyword general:gaps_out 2',
-            'keyword general:border_size 5',
-            'keyword unbind SUPER, LEFT',
-            'keyword unbind SUPER, RIGHT',
-            'keyword unbind SUPER, UP',
-            'keyword unbind SUPER, DOWN',
-            'keyword bind SUPER, LEFT, movefocus, l',
-            'keyword bind SUPER, RIGHT, movefocus, r',
-            'keyword bind SUPER, UP, movefocus, u',
-            'keyword bind SUPER, DOWN, movefocus, d',
-        },
-
-        -- These hyprctl commands are run when entering floating mode
-        floating_commands = {
-            'keyword general:col.active_border rgba(00ff99ee) rgba(33ccffee) 45deg',
-            'keyword general:col.inactive_border rgba(595959aa)',
-            'keyword general:gaps_in 1',
-            'keyword general:gaps_out 1',
-            'keyword general:border_size 2',
-            'keyword unbind SUPER, LEFT',
-            'keyword unbind SUPER, RIGHT',
-            'keyword unbind SUPER, UP',
-            'keyword unbind SUPER, DOWN',
-            'keyword bind SUPER, LEFT, exec, hyprfloat snap 0.0 0.5 0.0 1.0',
-            'keyword bind SUPER, RIGHT, exec, hyprfloat snap 0.5 1.0 0.0 1.0',
-            'keyword bind SUPER, UP, exec, hyprfloat center 1.25',
-            'keyword bind SUPER, DOWN, exec, hyprfloat center 0.75',
-        }
-    },
-}
+local config = require("lib.config")
 
 return function(args)
-    local config = utils.deep_merge(default_config, user_config)
+    local cfg = config.float_mode
     local mode = args[1]
 
     local windows = hyprland.get_clients()
@@ -54,7 +16,7 @@ return function(args)
     local commands = {}
     table.insert(commands, string.format('keyword windowrulev2 %s,class:.*', is_floating and "unset" or "float"))
 
-    local mode_commands = is_floating and config.float_mode.tiling_commands or config.float_mode.floating_commands
+    local mode_commands = is_floating and cfg.tiling_commands or cfg.floating_commands
     for _, cmd in ipairs(mode_commands) do
         table.insert(commands, cmd)
     end

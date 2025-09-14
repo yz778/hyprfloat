@@ -80,12 +80,11 @@ return {
 
         -- Display and monitor
         default_monitor_index = 0,
-        screen_width_ratio = 0.6,
 
         -- Tile dimensions
-        base_tile_size = 120,
-        selected_tile_size = 140,
-        tile_container_size = 160,
+        base_tile_size = 240,
+        selected_tile_size = 280,
+        tile_container_size = 300,
 
         -- Grid spacing
         grid_row_spacing = 5,

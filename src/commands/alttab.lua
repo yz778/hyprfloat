@@ -50,8 +50,8 @@ function shared.mru_sort(clients, mru_list)
         mru_map[address] = i
     end
     table.sort(clients, function(a, b)
-        local a_rank = mru_map[a.address] or a.focusHistoryID
-        local b_rank = mru_map[b.address] or b.focusHistoryID
+        local a_rank = mru_map[a.address] or 1000000 + a.focusHistoryID
+        local b_rank = mru_map[b.address] or 1000000 + b.focusHistoryID
         return a_rank < b_rank
     end)
     return clients
