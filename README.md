@@ -23,11 +23,11 @@ https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/yz778/hyprfloat/main/install.sh)"
     ```
 
-3.  (Optional) Install the default configuration file. You can customize it after installation.
+3.  (Optional) Install and customize the [default configuration](src/config/default.conf.lua) file.
     ```sh
     hyprfloat install-config
     ```
-    The configuration will be placed at `~/.config/hyprfloat/config.lua`.
+    The configuration will be placed at `~/.config/hypr/hyprfloat.config.lua`.
 
 4.  Add [keybindings](#bindings) to your ` ~/.config/hypr/hyprland.conf`
 
