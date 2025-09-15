@@ -20,7 +20,7 @@ return function(args)
     local new_x = screen.x + math.floor((screen.w - new_w) / 2)
     local new_y = screen.y + math.floor((screen.h - new_h) / 2)
 
-    hyprland.exec_hyprctl_batch(
+    hyprland.hyprctl_batch(
         "dispatch fullscreenstate 0",
         string.format("dispatch moveactive exact %d %d", new_x, new_y),
         string.format("dispatch resizeactive exact %d %d", new_w, new_h),

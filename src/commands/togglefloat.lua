@@ -34,7 +34,7 @@ return function(args)
         end
     end
 
-    hyprland.exec_hyprctl_batch(table.unpack(commands))
+    hyprland.hyprctl_batch(table.unpack(commands))
 
     if not is_floating then
         local restore_commands = {}
@@ -51,7 +51,7 @@ return function(args)
         end
 
         if #restore_commands > 0 then
-            hyprland.exec_hyprctl_batch(table.unpack(restore_commands))
+            hyprland.hyprctl_batch(table.unpack(restore_commands))
         end
     end
 end

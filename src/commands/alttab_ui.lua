@@ -5,8 +5,9 @@ local Gtk = lgi.require('Gtk', '3.0')
 local Gdk = lgi.require('Gdk', '3.0')
 local GdkPixbuf = lgi.require('GdkPixbuf', '2.0')
 local GLib = lgi.GLib
-local utils = require('lib.utils')
 local config = require('lib.config')
+local hyprland = require('lib.hyprland')
+local utils = require('lib.utils')
 
 local tiles = {}
 local prev_tile = 0
@@ -24,7 +25,7 @@ end
 
 local function cleanup()
     utils.debug("Cleaning up")
-    utils.exec_cmd("hyprctl dispatch submap reset")
+    hyprland.hyprctl("dispatch submap reset")
 end
 
 function alttab_ui.launch(params)
@@ -298,7 +299,7 @@ function alttab_ui.launch(params)
     end
 
     function app:on_activate()
-        utils.exec_cmd("hyprctl dispatch submap alttab")
+        hyprland.hyprctl("dispatch submap alttab")
 
         local dummywin = Gtk.ApplicationWindow {
             application = app,

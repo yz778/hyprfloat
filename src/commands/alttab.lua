@@ -38,8 +38,8 @@ end
 function shared.activate()
     local address = shared.selected_address
     utils.debug("Activating " .. address)
-    hyprland.exec_hyprctl_batch(
-        string.format("dispatch focuswindow address:%s", address),
+    hyprland.hyprctl_batch(
+        "dispatch focuswindow address:" .. address,
         "dispatch alterzorder top"
     )
 end

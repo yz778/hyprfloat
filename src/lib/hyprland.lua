@@ -1,40 +1,12 @@
 local cjson = require("cjson")
-local utils = require("lib.utils")
+local posix = require("posix")
+local xdg_runtime_dir = os.getenv("XDG_RUNTIME_DIR")
+local hyprland_sig = os.getenv("HYPRLAND_INSTANCE_SIGNATURE")
 
 local hyprland = {}
 
-function hyprland.exec_hyprctl_batch(...)
-    local commands = table.concat({ ... }, " ; ")
-    local cmd = string.format("hyprctl --batch '%s'", commands)
-    utils.exec_cmd(cmd)
-end
-
-function hyprland.get_activewindow()
-    return utils.get_cmd_json("hyprctl activewindow -j")
-end
-
-function hyprland.get_activeworkspace()
-    return utils.get_cmd_json("hyprctl activeworkspace -j")
-end
-
-function hyprland.get_monitors()
-    return utils.get_cmd_json("hyprctl monitors -j")
-end
-
-function hyprland.get_clients()
-    return utils.get_cmd_json("hyprctl clients -j")
-end
-
-function hyprland.get_workspaces()
-    return utils.get_cmd_json("hyprctl workspaces -j")
-end
-
-function hyprland.get_hyprsocket()
-    local posix = require("posix")
-
-    local xdg_runtime_dir = os.getenv("XDG_RUNTIME_DIR")
-    local hyprland_sig = os.getenv("HYPRLAND_INSTANCE_SIGNATURE")
-    local sock_path = string.format("%s/hypr/%s/.socket2.sock", xdg_runtime_dir, hyprland_sig)
+function hyprland.get_hyprsocket(sockname)
+    local sock_path = string.format("%s/hypr/%s/.%s.sock", xdg_runtime_dir, hyprland_sig, sockname)
 
     local sock = posix.socket(posix.AF_UNIX, posix.SOCK_STREAM, 0)
     if not sock then
@@ -49,6 +21,62 @@ function hyprland.get_hyprsocket()
     end
 
     return sock
+end
+
+function hyprland.hyprctl(command)
+    local sock = hyprland.get_hyprsocket('socket')
+
+    -- Send command
+    local ok, err = posix.send(sock, command)
+    if not ok then
+        posix.close(sock)
+        error("Failed to send command: " .. (err or "unknown error"))
+    end
+
+    -- Read response
+    local response = ""
+    while true do
+        local data, _ = posix.recv(sock, 4096)
+        if not data or data == "" then
+            break
+        end
+        response = response .. data
+    end
+
+    posix.close(sock)
+    return response
+end
+
+function hyprland.hyprctl_json(command)
+    local json_command = "-j/" .. command
+    local response = hyprland.hyprctl(json_command)
+    return cjson.decode(response)
+end
+
+function hyprland.hyprctl_batch(...)
+    local commands = table.concat({ ... }, ";")
+    local batch_command = "[[BATCH]] " .. commands
+    hyprland.hyprctl(batch_command)
+end
+
+function hyprland.get_activewindow()
+    return hyprland.hyprctl_json("activewindow")
+end
+
+function hyprland.get_activeworkspace()
+    return hyprland.hyprctl_json("activeworkspace")
+end
+
+function hyprland.get_monitors()
+    return hyprland.hyprctl_json("monitors")
+end
+
+function hyprland.get_clients()
+    return hyprland.hyprctl_json("clients")
+end
+
+function hyprland.get_workspaces()
+    return hyprland.hyprctl_json("workspaces")
 end
 
 function hyprland.parse_gaps(gaps_str)
@@ -73,32 +101,23 @@ function hyprland.get_border_gap_config()
         gaps_out = { top = 0, right = 0, bottom = 0, left = 0 }
     }
 
-    local border_output = utils.exec_cmd("hyprctl getoption general:border_size -j")
-    if border_output ~= "" then
-        local border_data = cjson.decode(border_output)
-        config.border_size = border_data.int or 0
+    local border_data = hyprland.hyprctl_json("getoption general:border_size")
+    config.border_size = border_data.int or 0
+
+    local gaps_in_data = hyprland.hyprctl_json("getoption general:gaps_in")
+    if gaps_in_data.custom then
+        config.gaps_in = hyprland.parse_gaps(gaps_in_data.custom)
+    elseif gaps_in_data.int then
+        local val = gaps_in_data.int
+        config.gaps_in = { top = val, right = val, bottom = val, left = val }
     end
 
-    local gaps_in_output = utils.exec_cmd("hyprctl getoption general:gaps_in -j")
-    if gaps_in_output ~= "" then
-        local gaps_in_data = cjson.decode(gaps_in_output)
-        if gaps_in_data.custom then
-            config.gaps_in = hyprland.parse_gaps(gaps_in_data.custom)
-        elseif gaps_in_data.int then
-            local val = gaps_in_data.int
-            config.gaps_in = { top = val, right = val, bottom = val, left = val }
-        end
-    end
-
-    local gaps_out_output = utils.exec_cmd("hyprctl getoption general:gaps_out -j")
-    if gaps_out_output ~= "" then
-        local gaps_out_data = cjson.decode(gaps_out_output)
-        if gaps_out_data.custom then
-            config.gaps_out = hyprland.parse_gaps(gaps_out_data.custom)
-        elseif gaps_out_data.int then
-            local val = gaps_out_data.int
-            config.gaps_out = { top = val, right = val, bottom = val, left = val }
-        end
+    local gaps_out_data = hyprland.hyprctl_json("getoption general:gaps_out")
+    if gaps_out_data.custom then
+        config.gaps_out = hyprland.parse_gaps(gaps_out_data.custom)
+    elseif gaps_out_data.int then
+        local val = gaps_out_data.int
+        config.gaps_out = { top = val, right = val, bottom = val, left = val }
     end
 
     return config

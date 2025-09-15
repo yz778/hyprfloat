@@ -15,7 +15,7 @@ return function(args)
     if nextmon < 0 then nextmon = moncount - 1 end
     if nextmon >= moncount then nextmon = 0 end
 
-    utils.exec_cmd(string.format("hyprctl dispatch movewindow mon:%d", nextmon))
+    hyprland.hyprctl("dispatch movewindow mon:" .. nextmon)
 
     local new = hyprland.get_active_context()
     if not new or new.window.monitor == old.window.monitor then
@@ -68,7 +68,7 @@ return function(args)
 
     new_x, new_y, new_w, new_h = hyprland.clamp_window_to_area(new_x, new_y, new_w, new_h, new_effective)
 
-    hyprland.exec_hyprctl_batch(
+    hyprland.hyprctl_batch(
         "dispatch fullscreenstate 0",
         string.format("dispatch moveactive exact %d %d", new_x, new_y),
         string.format("dispatch resizeactive exact %d %d", new_w, new_h),
