@@ -33,7 +33,7 @@ return function(args)
     assert(ok, "Failed to bind control socket: " .. (err or "unknown error"))
     posix.listen(listenfd, 1)
 
-    local hyprsock = hyprland.get_hyprsocket()
+    local hyprsock = hyprland.get_hyprsocket('socket2')
     local clients = hyprland.get_clients()
     local monitors = hyprland.get_monitors()
     local workspaces = hyprland.get_workspaces()
@@ -44,11 +44,11 @@ return function(args)
     local opt_commands = {}
     for _, opt in ipairs(cfg.options) do
         local key, newval = opt:match("^([^%s]+)%s*(.*)")
-        local origval = utils.get_cmd_json(string.format("hyprctl getoption %s -j", key))
+        local origval = hyprland.hyprctl_json(string.format("getoption %s", key))
         table.insert(orig_options, origval)
         table.insert(opt_commands, string.format("keyword %s %s", key, newval))
     end
-    hyprland.exec_hyprctl_batch(table.unpack(opt_commands))
+    hyprland.hyprctl_batch(table.unpack(opt_commands))
 
     -- Save all window states
     local active_window = hyprland.get_activewindow()
@@ -169,13 +169,11 @@ return function(args)
                 table.insert(grid_commands, string.format("dispatch resizeactive exact %d %d", win_w, win_h))
             end
         end
-
-        ::continue::
     end
 
     -- restore original active window focus
     table.insert(grid_commands, string.format("dispatch focuswindow address:%s", active_window.address))
-    hyprland.exec_hyprctl_batch(table.unpack(grid_commands))
+    hyprland.hyprctl_batch(table.unpack(grid_commands))
 
     local function restore_options()
         local opt_commands = {}
@@ -186,7 +184,7 @@ return function(args)
 
             table.insert(opt_commands, string.format("keyword %s %s", opt.option, val))
         end
-        hyprland.exec_hyprctl_batch(table.unpack(opt_commands))
+        hyprland.hyprctl_batch(table.unpack(opt_commands))
     end
 
     local function restore_windows(activewin_addr)
@@ -210,7 +208,7 @@ return function(args)
             table.insert(commands, string.format("dispatch alterzorder top", activewin_addr))
         end
 
-        hyprland.exec_hyprctl_batch(table.unpack(commands))
+        hyprland.hyprctl_batch(table.unpack(commands))
     end
 
     local function cleanup_and_exit(activewin_addr)

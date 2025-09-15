@@ -3,7 +3,7 @@ local event_loop = require("lib.event_loop")
 local posix = require("posix")
 
 return function(args)
-    local hyprsock = hyprland.get_hyprsocket()
+    local hyprsock = hyprland.get_hyprsocket('socket2')
     local loop = event_loop.create()
 
     print("\nListening for Hyprland events, press CTRL-C to exit...\n")

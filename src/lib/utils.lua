@@ -12,12 +12,6 @@ function utils.exec_cmd(cmd)
     return result
 end
 
-function utils.get_cmd_json(command)
-    local output = utils.exec_cmd(command)
-    if output == "" then return {} end
-    return cjson.decode(output)
-end
-
 function utils.fix_color_hex(input)
     -- hyprctl getoption returns colors in legacy format without the leading 0x
     -- but hyprctl keyword doesn't accept that, so we have it back
