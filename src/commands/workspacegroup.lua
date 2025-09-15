@@ -54,9 +54,11 @@ return function(args)
         end
         print(str)
     elseif action == "group" then
-        local group = tonumber(args[2])
-        utils.check_args(not group, "Invalid group number")
-        switch_group(group)
+        local nextgroup = tonumber(args[2])
+        utils.check_args(not nextgroup, "Invalid group number")
+        if group ~= nextgroup then
+            switch_group(nextgroup)
+        end
     else
         local nextgroup = group + (action == "next" and 1 or -1)
         nextgroup = nextgroup > groupcount and groupcount
