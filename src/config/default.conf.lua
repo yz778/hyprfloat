@@ -108,10 +108,13 @@ return {
                 padding: 4px;
             }
             .tile.selected {
-                background-color: #4A90E2;
-                border: 3px solid #2E5C8A;
+                background-color: rgba(100, 200, 255, .30);
+                border: 3px solid #33ccff;
                 border-radius: 8px;
                 padding: 4px;
+            }
+            #search {
+                border: 1px solid #c0c0c0;
             }
             #label1 {
                 color: #ddeeff;

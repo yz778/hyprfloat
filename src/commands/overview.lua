@@ -242,7 +242,7 @@ return function(args)
 
     local done = false
     while not done and not interrupted do
-        -- uncomment to exit overview mode on window focus
+        -- TODO: uncomment to exit overview mode on window focus
         --
         -- local hypr_ready = poll.rpoll(hyprsock, 50)
         -- if hypr_ready and hypr_ready > 0 then
