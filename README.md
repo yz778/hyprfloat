@@ -33,9 +33,9 @@ https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
 
 ## Features
 
-- **ALT-Tab Window Switching**: A window switcher with previews, MRU (Most-Recently-Used) focus, and an option to switch between windows of the same class.
+- **ALT-Tab Window Switching**: A window switcher with MRU (Most-Recently-Used) focus, search / preview, and an option to switch between windows of the same class. To search through previews, keep holding the ALT key down as you type.
 
-https://github.com/user-attachments/assets/469a2498-d0a7-4cb5-9580-57418d866e5f
+https://github.com/user-attachments/assets/c4d359ad-6b04-4b91-8774-80df4ad27d6c
 
 - **Workspace Overview**: Arranges all windows into a grid, similar to GNOME's overview.
 
