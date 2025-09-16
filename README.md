@@ -127,6 +127,10 @@ bind = $mainMod_SHIFT, DOWN,      exec, hyprfloat center 1.00
 # Cycle through workspace groups
 bind = $mainMod_CTRL, LEFT,       exec, hyprfloat workspacegroup prev
 bind = $mainMod_CTRL, RIGHT,      exec, hyprfloat workspacegroup next
+bind = $mainMod_CTRL, M,          exec, hyprfloat workspacegroup move
+bind = $mainMod, 1,               exec, hyprfloat workspacegroup group 1
+bind = $mainMod, 2,               exec, hyprfloat workspacegroup group 2
+bind = $mainMod, 3,               exec, hyprfloat workspacegroup group 3
 ```
 
 ## Tips and Tricks
