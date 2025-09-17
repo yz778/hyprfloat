@@ -86,7 +86,7 @@ local function select_workspaceset_group()
         local listbox = Gtk.ListBox {}
         local rows = {}
         for i, _ in ipairs(cfg.groups) do
-            local option = "Workspace Group "
+            local option = "🖥️ Group "
                 .. i
                 .. (i == group and " (Current)" or "")
 
@@ -149,9 +149,22 @@ return function(args)
     end
 
     if action == "status" then
+        local workspaces = hyprland.get_workspaces()
         local str = ""
-        for i, _ in ipairs(cfg.groups) do
-            str = str .. (group == i and cfg.icons.active or cfg.icons.default)
+        for i, g in ipairs(cfg.groups) do
+            if group == i then
+                str = str .. cfg.icons.active
+            else
+                local has_windows = false
+                for _, ws in ipairs(g) do
+                    if workspaces[ws].windows > 0 then
+                        has_windows = true
+                        break
+                    end
+                end
+
+                str = str .. (has_windows and cfg.icons.occupied or cfg.icons.default)
+            end
         end
         print(str)
     elseif action == "group" then

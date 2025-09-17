@@ -132,6 +132,7 @@ return {
         icons = {
             active = "  ",
             default = "  ",
+            occupied = "  ",
         },
         groups = {
             { 1, 2, 3 }, -- monitor 1
