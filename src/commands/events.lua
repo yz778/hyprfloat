@@ -1,36 +1,44 @@
-local hyprland = require("lib.hyprland")
-local event_loop = require("lib.event_loop")
-local posix = require("posix")
+return {
+    run = function(args)
+        local hyprland = require("lib.hyprland")
+        local event_loop = require("lib.event_loop")
+        local posix = require("posix")
 
-return function(args)
-    local hyprsock = hyprland.get_hyprsocket('socket2')
-    local loop = event_loop.create()
+        local hyprsock = hyprland.get_hyprsocket('socket2')
+        local loop = event_loop.create()
 
-    print("\nListening for Hyprland events, press CTRL-C to exit...\n")
-    local event_count = 0
+        print("\nListening for Hyprland events, press CTRL-C to exit...\n")
+        local event_count = 0
 
-    event_loop.add_source(loop, hyprsock, function(fd)
-        local data, err = posix.recv(fd, 4096)
+        event_loop.add_source(loop, hyprsock, function(fd)
+            local data, err = posix.recv(fd, 4096)
 
-        if not data then
-            if err then
-                print("Error reading from socket: " .. err)
+            if not data then
+                if err then
+                    print("Error reading from socket: " .. err)
+                end
+                return false
             end
-            return false
-        end
 
-        for line in data:gmatch("[^\r\n]+") do
-            event_count = event_count + 1
-            print(string.format("%d: %s", event_count, line))
-        end
+            for line in data:gmatch("[^\r\n]+") do
+                event_count = event_count + 1
+                print(string.format("%d: %s", event_count, line))
+            end
 
-        return true
-    end)
+            return true
+        end)
 
-    event_loop.set_cleanup(loop, function()
-        print("\nExiting")
-        posix.close(hyprsock)
-    end)
+        event_loop.set_cleanup(loop, function()
+            print("\nExiting")
+            posix.close(hyprsock)
+        end)
 
-    event_loop.run(loop)
-end
+        event_loop.run(loop)
+    end,
+    help = {
+        short = "Subscribes to and prints Hyprland events.",
+        usage = "events",
+        long =
+        "Connects to the Hyprland event socket and prints all incoming events to the console. Useful for debugging."
+    }
+}

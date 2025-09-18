@@ -1,41 +1,58 @@
 local lib = {}
 
 local function print_help()
-    print("Usage: hyprfloat <command> [args...]\n")
-    print("  alttab <next|prev> [sameclass]")
-    print("  center <scale>")
-    print("  events")
-    print("  install-config")
-    print("  movemon <direction>")
-    print("  overview")
-    print("  snap <x0> <x1> <y0> <y1>")
-    print("  togglefloat <mode>")
-    print("  version")
-    print("  workspacegroup <next|prev|status|move>")
+    print("Usage: hyprfloat <command> [args...]")
+    print("\nCommands:\n")
+
+    local manifest = require("lib.manifest")
+    local commands = {}
+    for _, name in ipairs(manifest.commands) do
+        local ok, cmd = pcall(require, "commands." .. name)
+        if ok and cmd.help then
+            table.insert(commands, { name = name, help = cmd.help })
+        end
+    end
+
+    table.sort(commands, function(a, b) return a.name < b.name end)
+
+    for _, cmd in ipairs(commands) do
+        print(string.format("  %s\n  - %s\n", cmd.help.usage, cmd.help.short))
+    end
 end
 
 function lib.run(args)
     if #args < 1 then
         print_help()
-        os.exit(1)
+        return
     end
 
     local utils = require('lib.utils')
-    local command = table.remove(args, 1)
+    local command_name = table.remove(args, 1)
 
-    local ok, handler_or_error = pcall(require, "commands." .. command)
+    if command_name == "--help" then
+        print_help()
+        return
+    end
+
+    local ok, command = pcall(require, "commands." .. command_name)
+
     if not ok then
-        utils.debug(handler_or_error)
-        if string.match(handler_or_error, "module 'commands%." .. command .. "' not found") then
-            print("Invalid command: " .. command)
+        utils.debug(command)
+        if string.match(command, "module 'commands%." .. command_name .. "' not found") then
+            print("Invalid command: " .. command_name)
         else
-            print(handler_or_error)
+            print(command)
         end
         os.exit(1)
     end
 
-    utils.debug(string.format("Run: %s %s", command, table.concat(args, " ")))
-    handler_or_error(args)
+    if #args > 0 and args[1] == "--help" then
+        print(command.help.long)
+        return
+    end
+
+    utils.debug(string.format("Run: %s %s", command_name, table.concat(args, " ")))
+    command.run(args)
 end
 
 return lib

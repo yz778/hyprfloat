@@ -1,4 +1,3 @@
-local cjson = require("cjson")
 local posix = require("posix")
 local config = require("lib.config")
 

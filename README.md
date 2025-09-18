@@ -51,50 +51,90 @@ https://github.com/user-attachments/assets/c4d359ad-6b04-4b91-8774-80df4ad27d6c
 
 ## Commands
 
-- `hyprfloat alttab <next|prev> [sameclass]`
-  - Switches between windows. If ALT is held down the Window Switcher UI appears
-  - **next**: Switches to the next window in the MRU list
-  - **prev**: Switches to the previous window in the MRU list
-  - **sameclass**: (Optional) Only switches between windows of the same class
+<!-- GENERATED-COMMANDS-START -->
 
-- `hyprfloat center <scale>`
-  - Centers the active window and optionally scales it.
-  - **scale**: Scaling factor, e.g. `1.25`, `1.0` (default), `0.75`
+#### `alttab <next|prev> [sameclass]`
+<blockquote>
+Switches focus to the next or previous window in the focus history.
 
-- `hyprfloat events`
-  - Prints Hyprland events, for debugging
+**Arguments:**
+- `<next|prev>` Required. Specifies whether to switch to the next or the previous window.
+- `[sameclass]` Optional. If provided, the window selection is restricted to windows of the same class as the currently active window.
 
-- `hyprfloat install-config`:
-  - Installs the default configuration
+</blockquote>
 
-- `hyprfloat movemon <direction>`:
-  - Moves the active window to another monitor
-  - **direction**: Direction to move, e.g. `-1` one previous, `+1` one next
+#### `center <scale>`
+<blockquote>
+Centers the active window in the middle of the screen and applies a scaling factor.
 
-- `hyprfloat overview`:
-  - Toggles the workspace overview
+**Arguments:**
+- `<scale>` Required. A number to scale the window size (e.g., 1.0 for original size, 1.2 to enlarge, 0.8 to shrink).
 
-- `hyprfloat snap <x0> <x1> <y0> <y1>`
-  - Snaps the active window to a fractional portion of the screen
-  - **x0**: Left position as fraction of screen, e.g. `.20` to start at 20%
-  - **x0**: Right position as fraction of screen, e.g. `.80` to end at 80%
-  - **y0**: Top position as fraction of screen, e.g. `0` to start at top
-  - **y1**: Bottom position as fraction of screen, e.g. `1` to end at bottom
+</blockquote>
 
-- `hyprfloat togglefloat [mode]`: Toggles floating mode for all windows
-  - **on**: (Optional) Set all windows to floating
-  - **off**: (Optional) Set all windows to tiling
-  - **(default)**: Toggles between floating and tiling
+#### `events`
+<blockquote>
+Connects to the Hyprland event socket and prints all incoming events to the console. Useful for debugging.
+</blockquote>
 
-- `hyprfloat version`
-  - Prints the version of hyprfloat
+#### `install-config`
+<blockquote>
+Copies the default configuration file to the user's config directory, allowing for user-specific customizations.
+</blockquote>
 
-- `hyprfloat workspacegroup <next|prev|status|move>`
-  - Manage multiple workspaces as one group
-  - **next**: Switch to the next workspace group
-  - **prev**: Switch to the previous workspace group
-  - **status**: Print the workspace group status, e.g. [for using in Waybar](#tips-and-tricks)
-  - **move**: Presents a UI to move the active window to a new workspace group
+#### `movemon <direction>`
+<blockquote>
+Moves the active window to a different monitor while maintaining its relative position and size.
+
+**Arguments:**
+- `<direction>` Required. A number indicating which monitor to move to (+1 for next, -1 for previous).
+
+</blockquote>
+
+#### `overview`
+<blockquote>
+Toggles a GNOME-style workspace overview, arranging all windows in a grid. Running the command again will exit overview mode.
+</blockquote>
+
+#### `snap <x0> <x1> <y0> <y1>`
+<blockquote>
+Snaps the active window to a fractional portion of the screen.
+
+**Arguments:**
+- `<x0>` Required. Left position as a fraction of screen width (e.g., 0.0).
+- `<x1>` Required. Right position as a fraction of screen width (e.g., 0.5 for half width).
+- `<y0>` Required. Top position as a fraction of screen height (e.g., 0.0).
+- `<y1>` Required. Bottom position as a fraction of screen height (e.g., 1.0 for full height).
+
+</blockquote>
+
+#### `togglefloat [on|off]`
+<blockquote>
+Switches all windows between floating and tiling layouts.
+
+**Arguments:**
+- `[on|off]` Optional. Explicitly set all windows to floating ('on') or tiling ('off'). If omitted, it toggles the current state.
+
+</blockquote>
+
+#### `version`
+<blockquote>
+Prints the current version of hyprfloat.
+</blockquote>
+
+#### `workspacegroup <next|prev|status|group|move>`
+<blockquote>
+Manages groups of workspaces, useful for multi-monitor setups.
+
+**Arguments:**
+- `<next|prev>` Switches to the next or previous workspace group.
+- `<status>` Prints the status of workspace groups, useful for status bars.
+- `<group>` Switches to a specific workspace group by number.
+- `<move>` Presents a UI to move the active window to a different workspace group.
+
+</blockquote>
+
+<!-- GENERATED-COMMANDS-END -->
 
 ## Bindings
 

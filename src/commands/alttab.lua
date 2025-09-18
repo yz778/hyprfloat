@@ -44,41 +44,54 @@ function shared.activate()
     )
 end
 
-return function(args)
-    utils.debug("-----")
-    utils.debug("alttab started with args: " .. table.concat(args, " "))
+return {
+    run = function(args)
+        utils.debug("-----")
+        utils.debug("alttab started with args: " .. table.concat(args, " "))
 
-    utils.check_args(#args < 1, "Usage: hyprfloat alttab <next|prev> [sameclass]")
-    local action = args[1]
-    local valid = { next = true, prev = true }
-    utils.check_args(not valid[action], "Invalid first argument")
+        utils.check_args(#args < 1, "Usage: hyprfloat alttab <next|prev> [sameclass]")
+        local action = args[1]
+        local valid = { next = true, prev = true }
+        utils.check_args(not valid[action], "Invalid first argument")
 
-    local has_sameclass = args[2] == "sameclass"
+        local has_sameclass = args[2] == "sameclass"
 
-    -- Get and filter clients
-    local clients = hyprland.get_clients()
-    if has_sameclass then
-        local active_window = hyprland.get_activewindow()
-        local active_class = active_window and active_window.class
-        if active_class then
-            local filtered_clients = {}
-            for _, client in ipairs(clients) do
-                if client.class == active_class then
-                    table.insert(filtered_clients, client)
+        -- Get and filter clients
+        local clients = hyprland.get_clients()
+        if has_sameclass then
+            local active_window = hyprland.get_activewindow()
+            local active_class = active_window and active_window.class
+            if active_class then
+                local filtered_clients = {}
+                for _, client in ipairs(clients) do
+                    if client.class == active_class then
+                        table.insert(filtered_clients, client)
+                    end
                 end
+                clients = filtered_clients
             end
-            clients = filtered_clients
         end
-    end
 
-    -- Sort by focus history and apply direction
-    clients = shared.sort_and_apply_direction(clients, action)
-    shared.selected_address = clients[1].address
+        -- Sort by focus history and apply direction
+        clients = shared.sort_and_apply_direction(clients, action)
+        shared.selected_address = clients[1].address
 
-    -- UI Launcher Mode: Launch the full UI
-    local alttab_ui = require('commands.alttab_ui')
-    alttab_ui.launch({
-        clients = clients,
-        shared = shared
-    })
-end
+        -- UI Launcher Mode: Launch the full UI
+        local alttab_ui = require('commands.alttab_ui')
+        alttab_ui.launch({
+            clients = clients,
+            shared = shared
+        })
+    end,
+    help = {
+        short = "Focuses the next or previous window.",
+        usage = "alttab <next|prev> [sameclass]",
+        long = [[
+Switches focus to the next or previous window in the focus history.
+
+**Arguments:**
+- `<next|prev>` Required. Specifies whether to switch to the next or the previous window.
+- `[sameclass]` Optional. If provided, the window selection is restricted to windows of the same class as the currently active window.
+]]
+    }
+}
