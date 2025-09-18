@@ -165,7 +165,7 @@ function alttab_ui.launch(params)
         for i, client_record in ipairs(all_clients) do
             local client = client_record.client
             if client.workspace.id > 0 then
-                local temp_file = "/tmp/hyprfloat/preview-" .. client.address .. ".png"
+                local temp_file = utils.runtime_path("preview-" .. client.address .. ".png")
                 local temp_file_tmp = temp_file .. ".tmp"
 
                 -- make sure scaled window isn't smaller than tile size

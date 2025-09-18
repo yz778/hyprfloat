@@ -13,7 +13,9 @@ else
     RESET=''
 fi
 
-TAG="${TAG:-stable}"
+json=$(curl -s https://api.github.com/repos/yz778/hyprfloat/releases/latest)
+VERSION=$(echo "$json" | grep -oP '"name":\s*"\K[^"]+')
+TARBALL_URL=$(echo "$json" | grep -oP '"tarball_url":\s*"\K[^"]+')
 INSTALL_HOME="${INSTALL_HOME:-$HOME/.local/share}"
 CONFIG_HOME="${CONFIG_HOME:-$HOME/.config/hypr}"
 BIN_DIR="${BIN_DIR:-$HOME/.local/bin}"
@@ -39,10 +41,10 @@ check_prerequisites() {
 }
 
 download() {
-    printf " - Downloading hyprfloat ($TAG)"
+    printf " - Downloading hyprfloat ($VERSION)"
 
     TMP_DIR=$(mktemp -d)
-    if ! curl -sL "https://github.com/yz778/hyprfloat/archive/refs/tags/$TAG.tar.gz" | tar -xz -C "$TMP_DIR" --strip-components=1 2>/dev/null; then
+    if ! curl -sL "$TARBALL_URL" | tar -xz -C "$TMP_DIR" --strip-components=1 2>/dev/null; then
         printf ": ${RED}download failed${RESET}\n"
         exit 1
     fi
@@ -65,8 +67,6 @@ install_files() {
     printf "${RESET}"
     printf "... ${GREEN}OK${RESET}\n"
 }
-
-
 
 check_version() {
     printf " - Verifying"

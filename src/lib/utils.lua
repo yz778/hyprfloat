@@ -3,7 +3,7 @@ local posix = require("posix")
 local config = require("lib.config")
 
 local utils = {}
-local log_file_path = "/tmp/hyprfloat/debug.log"
+local log_file_path = "/tmp/hyprfloat-debug.log"
 
 function utils.exec_cmd(cmd)
     local handle = io.popen(cmd)
@@ -94,6 +94,18 @@ function utils.debug(message)
         file:write(string.format("[%s] %s\n", os.date("%Y-%m-%d %H:%M:%S"), message))
         file:close()
     end
+end
+
+function utils.runtime_path(rel)
+    local base = os.getenv("XDG_RUNTIME_DIR")
+    if not base or base == "" then
+        local uid = assert(io.popen("id -u")):read("*l")
+        base = (os.getenv("TMPDIR") or "/tmp") .. "/run-" .. uid
+    else
+        base = base .. "/hyprfloat"
+    end
+    os.execute(string.format("mkdir -p '%s' && chmod 700 '%s'", base, base))
+    return rel and (base .. "/" .. rel) or base
 end
 
 return utils

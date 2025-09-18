@@ -1,5 +1,5 @@
 return {
-    -- Write debug output to /tmp/hyprfloat/debug.log
+    -- Write debug output to /tmp/hyprfloat-debug.log
     debug = false,
 
     overview = {
@@ -132,6 +132,7 @@ return {
         icons = {
             active = "  ",
             default = "  ",
+            occupied = "  ",
         },
         groups = {
             { 1, 2, 3 }, -- monitor 1

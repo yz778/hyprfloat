@@ -20,7 +20,7 @@ https://github.com/user-attachments/assets/bf9eaf2c-1d13-4ead-992c-1e2cb2328951
 
 2.  Run the install script
     ```sh
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/yz778/hyprfloat/main/install.sh)"
+    curl -fsSL https://raw.githubusercontent.com/yz778/hyprfloat/main/install.sh | sh
     ```
 
 3.  (Optional) Install and customize the [default configuration](src/config/default.conf.lua) file.
@@ -127,6 +127,10 @@ bind = $mainMod_SHIFT, DOWN,      exec, hyprfloat center 1.00
 # Cycle through workspace groups
 bind = $mainMod_CTRL, LEFT,       exec, hyprfloat workspacegroup prev
 bind = $mainMod_CTRL, RIGHT,      exec, hyprfloat workspacegroup next
+bind = $mainMod_CTRL, M,          exec, hyprfloat workspacegroup move
+bind = $mainMod, 1,               exec, hyprfloat workspacegroup group 1
+bind = $mainMod, 2,               exec, hyprfloat workspacegroup group 2
+bind = $mainMod, 3,               exec, hyprfloat workspacegroup group 3
 ```
 
 ## Tips and Tricks
