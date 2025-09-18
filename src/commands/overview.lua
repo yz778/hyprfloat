@@ -5,7 +5,7 @@ local posix = require("posix")
 local signal = require("posix.signal")
 local poll = require("posix.poll")
 
-local socket_path = "/tmp/hyprfloat/overview.sock"
+local socket_path = utils.runtime_path("/overview.sock")
 
 return function(args)
     local cfg = config.overview

@@ -37,7 +37,6 @@ function lib.run(args)
     end
 
     utils.debug(string.format("Run: %s %s", command, table.concat(args, " ")))
-    posix.mkdir("/tmp/hyprfloat")
     handler_or_error(args)
 end
 

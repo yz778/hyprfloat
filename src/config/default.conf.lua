@@ -1,5 +1,5 @@
 return {
-    -- Write debug output to /tmp/hyprfloat/debug.log
+    -- Write debug output to /tmp/hyprfloat-debug.log
     debug = false,
 
     overview = {
