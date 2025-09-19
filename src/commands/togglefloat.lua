@@ -2,6 +2,7 @@ return {
     run = function(args)
         local hyprland = require("lib.hyprland")
         local config = require("lib.config")
+        local utils = require("lib.utils")
 
         local cfg = config.float_mode
         local mode = args[1]
@@ -53,6 +54,10 @@ return {
             if #restore_commands > 0 then
                 hyprland.hyprctl_batch(table.unpack(restore_commands))
             end
+        end
+
+        for _, cmd in ipairs(cfg.commands) do
+            utils.exec_cmd(cmd)
         end
     end,
     help = {

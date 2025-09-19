@@ -108,6 +108,12 @@ Snaps the active window to a fractional portion of the screen.
 
 </blockquote>
 
+#### `status`
+<blockquote>
+Prints workspaces and current mode, typically for use with Waybar.
+
+</blockquote>
+
 #### `togglefloat [on|off]`
 <blockquote>
 Switches all windows between floating and tiling layouts.
@@ -128,7 +134,7 @@ Manages groups of workspaces, useful for multi-monitor setups.
 
 **Arguments:**
 - `<next|prev>` Switches to the next or previous workspace group.
-- `<status>` Prints the status of workspace groups, useful for status bars.
+- `<status>` DEPRECATED: Use `hyprctl status` instead.
 - `<group>` Switches to a specific workspace group by number.
 - `<move>` Presents a UI to move the active window to a different workspace group.
 

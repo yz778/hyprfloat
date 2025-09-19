@@ -1,5 +1,5 @@
 return {
-    version = "1.0.6",
+    version = "1.0.7",
     commands = {
         "alttab",
         "center",
@@ -8,6 +8,7 @@ return {
         "movemon",
         "overview",
         "snap",
+        "status",
         "togglefloat",
         "version",
         "workspacegroup"

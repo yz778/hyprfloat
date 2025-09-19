@@ -11,6 +11,13 @@ return {
 
         local cfg = config.overview
 
+        local function run_cmds()
+            for _, cmd in ipairs(cfg.commands) do
+                utils.debug(cmd)
+                utils.exec_cmd(cmd)
+            end
+        end
+
         -- if another instance is running, untoggle the overview
         local sockfd = posix.socket(posix.AF_UNIX, posix.SOCK_STREAM, 0)
         local addr = { family = posix.AF_UNIX, path = socket_path }
@@ -33,6 +40,8 @@ return {
         local ok, err = posix.bind(listenfd, addr)
         assert(ok, "Failed to bind control socket: " .. (err or "unknown error"))
         posix.listen(listenfd, 1)
+
+        run_cmds()
 
         local hyprsock = hyprland.get_hyprsocket('socket2')
         local clients = hyprland.get_clients()
@@ -224,6 +233,8 @@ return {
             if hyprsock then
                 posix.close(hyprsock)
             end
+
+            run_cmds()
 
             utils.debug("Exiting overview mode")
             os.exit(0)

@@ -107,4 +107,21 @@ function utils.runtime_path(rel)
     return rel and (base .. "/" .. rel) or base
 end
 
+function utils.find_ws_group(groups, workspaceid)
+    for i, group in ipairs(groups) do
+        for _, v in ipairs(group) do
+            if v == workspaceid then
+                return i
+            end
+        end
+    end
+
+    return nil
+end
+
+function utils.file_exists(name)
+    local result = os.execute("[ -e " .. name .. " ]")
+    return result == true or result == 0
+end
+
 return utils

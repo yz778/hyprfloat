@@ -25,6 +25,11 @@ return {
             "general:col.active_border rgba(ffd700ee) rgba(ff8c00ee) 45deg",
             "general:col.inactive_border rgba(ffd70033) rgba(ff8c0033) 45deg",
             'general:border_size 5',
+        },
+
+        -- Shell commands to run after toggling overview
+        commands = {
+            "pkill -RTMIN+8 waybar"
         }
     },
 
@@ -61,6 +66,11 @@ return {
             'keyword bind SUPER, RIGHT, exec, hyprfloat snap 0.5 1.0 0.0 1.0',
             'keyword bind SUPER, UP, exec, hyprfloat center 1.25',
             'keyword bind SUPER, DOWN, exec, hyprfloat center 0.75',
+        },
+
+        -- Shell commands to run after toggling floating status
+        commands = {
+            "pkill -RTMIN+8 waybar",
         }
     },
 
@@ -139,6 +149,8 @@ return {
             { 4, 5, 6 }, -- monitor 2
             { 7, 8, 9 }, -- monitor 3
         },
+
+        -- Shell commands to run after changing workspaces
         commands = {
             "pkill -RTMIN+8 waybar"
         }
