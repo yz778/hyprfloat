@@ -157,91 +157,70 @@ function alttab_ui.launch(params)
     end
 
     local function async_preview_capture(on_preview_ready)
-        local pending_captures = {}
-        local active_captures = {}
-        local completed_files = {}
+        local active_count = 0
 
-        -- First pass: generate all grim commands and populate pending_captures queue
+        -- Simple function to capture one client in its own thread
+        local function capture_client(index, client)
+            -- Calculate scale
+            local w = client.size[1] * cfg.preview_scale
+            local h = client.size[2] * cfg.preview_scale
+            local scale = (w < cfg.selected_tile_size or h < cfg.selected_tile_size)
+                and 1.0
+                or cfg.preview_scale
+
+            -- Build grim command
+            local grim_cmd = string.format("grim -l 0 -s %f -w %s -", scale, client.address)
+
+            utils.debug("Starting capture for " .. client.address .. " with cmd: " .. grim_cmd)
+
+            -- Execute grim and read all output at once
+            local file = io.popen(grim_cmd, "r")
+            if not file then
+                utils.debug("ERROR: Failed to start grim for " .. client.address)
+                return
+            end
+
+            local image_data = file:read("*a")
+            local exit_code = file:close()
+
+            utils.debug(string.format("Capture result for %s: %d bytes, exit_code: %s",
+                client.address,
+                image_data and #image_data or 0,
+                tostring(exit_code)))
+
+            -- Deliver result back to main thread
+            active_count = active_count - 1
+            GLib.idle_add(GLib.PRIORITY_DEFAULT, function()
+                if image_data and #image_data > 0 and (exit_code == 0 or exit_code == true) then
+                    on_preview_ready(index, image_data)
+                else
+                    utils.debug("FAILED capture for " .. client.address .. " - no data or bad exit code")
+                end
+                return false -- Don't repeat
+            end)
+        end
+
+        -- Start a thread for each client, respecting max concurrent limit
         for i, client_record in ipairs(all_clients) do
             local client = client_record.client
             if client.workspace.id > 0 then
-                local temp_file = utils.runtime_path("preview-" .. client.address .. ".png")
-                local temp_file_tmp = temp_file .. ".tmp"
+                -- Wait for available slot
+                while active_count >= cfg.max_concurrent do
+                    utils.debug("Waiting for slot, active: " .. active_count)
+                    GLib.usleep(10000) -- Sleep 10ms
+                end
 
-                -- make sure scaled window isn't smaller than tile size
-                local w = client.size[1] * cfg.preview_scale
-                local h = client.size[2] * cfg.preview_scale
-                local scale = (w < cfg.selected_tile_size or h < cfg.selected_tile_size)
-                    and 1.0
-                    or cfg.preview_scale
+                active_count = active_count + 1
+                utils.debug("Starting thread " .. active_count .. " for " .. client.address)
 
-                -- prepare grim command to write to .tmp file first, then rename to avoid race condition
-                local grim_cmd = string.format("grim -l 0 -s %f -w %s %s && mv %s %s &",
-                    scale,
-                    client.address,
-                    temp_file_tmp,
-                    temp_file_tmp,
-                    temp_file
-                )
+                -- Spawn thread using GLib
+                local thread = GLib.Thread.new("grim-" .. client.address, function()
+                    capture_client(i, client)
+                end)
 
-                table.insert(pending_captures, {
-                    index = i,
-                    client_record = client_record,
-                    temp_file = temp_file,
-                    grim_cmd = grim_cmd
-                })
+                -- Don't join - let it run asynchronously
             end
         end
-
-        -- Function to process captures up to max concurrent limit
-        local function process_captures()
-            -- Start new captures if we have capacity and pending items
-            local running_count = 0
-            for _ in pairs(active_captures) do
-                running_count = running_count + 1
-            end
-
-            while running_count < cfg.max_concurrent and #pending_captures > 0 do
-                local capture_info = table.remove(pending_captures, 1) -- remove from front of queue
-
-                -- Execute the grim command
-                os.execute(capture_info.grim_cmd)
-                active_captures[capture_info.index] = capture_info
-                running_count = running_count + 1
-            end
-
-            -- Check for completed captures
-            for i, capture_info in pairs(active_captures) do
-                local file = io.open(capture_info.temp_file, "rb")
-                if file then
-                    -- File exists, check if it's complete by trying to read it
-                    local image_data = file:read("*a")
-                    file:close()
-
-                    if image_data and #image_data > 0 then
-                        -- Successfully captured
-                        os.remove(capture_info.temp_file)
-                        completed_files[i] = true
-                        active_captures[i] = nil
-                        on_preview_ready(capture_info.index, image_data)
-                    end
-                end
-            end
-
-            -- Continue processing if there are still items in queue or active captures
-            local still_processing = #pending_captures > 0
-            if not still_processing then
-                for _ in pairs(active_captures) do
-                    still_processing = true
-                    break
-                end
-            end
-
-            return still_processing
-        end
-
-        -- Set up polling timer to process captures
-        GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, process_captures)
     end
 
     local function create_pixbuf_from_source(source)
@@ -650,11 +629,22 @@ function alttab_ui.launch(params)
     local signals = { 'SIGINT', 'SIGTERM', 'SIGHUP' }
     for _, sig in ipairs(signals) do
         posix.signal(posix[sig], function()
+            cleanup()
             app:quit()
         end)
     end
 
-    app:run(nil)
+    -- Wrap app:run in pcall to ensure cleanup on any errors
+    local success, err = pcall(function()
+        app:run(nil)
+    end)
+    if not success then
+        cleanup()
+        error(err)
+    end
+
+    -- Ensure cleanup runs after app:run completes
+    cleanup()
 end
 
 return alttab_ui

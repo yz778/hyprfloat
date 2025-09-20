@@ -5,27 +5,32 @@ local shared = {}
 
 shared.selected_address = nil
 
-function shared.sort_and_apply_direction(clients, direction)
-    local clientcount = #clients
+function shared.sort_and_apply_direction(workspaceid, clients, direction)
+    table.sort(clients, function(a, b)
+        -- Special: focusHistoryID 0 or 1 always come first
+        local a_special = (a.focusHistoryID <= 1) and 1 or 0
+        local b_special = (b.focusHistoryID <= 1) and 1 or 0
+        if a_special ~= b_special then
+            return a_special > b_special
+        end
 
-    if clientcount <= 1 then
-        return clients
-    end
+        -- Then prioritize same workspace
+        local a_same_ws = a.workspace.id == workspaceid and 1 or 0
+        local b_same_ws = b.workspace.id == workspaceid and 1 or 0
+        if a_same_ws ~= b_same_ws then
+            return a_same_ws > b_same_ws
+        end
 
-    if direction == "next" then
-        -- Sort by focusHistoryID ascending (oldest focus first, so next in sequence comes first)
-        table.sort(clients, function(a, b)
+        -- Then by focusHistoryID according to direction
+        if direction == "next" then
             return a.focusHistoryID < b.focusHistoryID
-        end)
-    elseif direction == "prev" then
-        -- Sort by focusHistoryID descending (newest focus first, so prev in sequence comes first)
-        table.sort(clients, function(a, b)
+        else -- "prev"
             return a.focusHistoryID > b.focusHistoryID
-        end)
-    end
+        end
+    end)
 
     -- Always swap the first two items (two most relevant windows for the direction)
-    if clientcount >= 2 then
+    if #clients >= 2 then
         local first = clients[1]
         local second = clients[2]
         clients[1] = second
@@ -54,12 +59,11 @@ return {
         local valid = { next = true, prev = true }
         utils.check_args(not valid[action], "Invalid first argument")
 
+        -- build list of clients, taking into account whether we are filtering by the sameclass
         local has_sameclass = args[2] == "sameclass"
-
-        -- Get and filter clients
+        local active_window = hyprland.get_activewindow()
         local clients = hyprland.get_clients()
         if has_sameclass then
-            local active_window = hyprland.get_activewindow()
             local active_class = active_window and active_window.class
             if active_class then
                 local filtered_clients = {}
@@ -73,7 +77,9 @@ return {
         end
 
         -- Sort by focus history and apply direction
-        clients = shared.sort_and_apply_direction(clients, action)
+        if #clients > 1 then
+            clients = shared.sort_and_apply_direction(active_window.workspace.id, clients, action)
+        end
         shared.selected_address = clients[1].address
 
         -- UI Launcher Mode: Launch the full UI
