@@ -15,8 +15,12 @@ return {
         local ctx = hyprland.get_active_context()
         utils.check_args(not ctx, "No active window/monitor context")
 
-        local effective_area = ctx.effective_area
+        if not ctx.window.floating then
+            utils.debug("Ignoring snap for tiling window")
+            return
+        end
 
+        local effective_area = ctx.effective_area
         local new_x = effective_area.x + math.floor(effective_area.w * x0_frac)
         local new_y = effective_area.y + math.floor(effective_area.h * y0_frac)
         local new_w = math.floor(effective_area.w * (x1_frac - x0_frac))

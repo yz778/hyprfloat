@@ -11,12 +11,6 @@ function utils.exec_cmd(cmd)
     return result
 end
 
-function utils.fix_color_hex(input)
-    -- hyprctl getoption returns colors in legacy format without the leading 0x
-    -- but hyprctl keyword doesn't accept that, so we have it back
-    return type(input) == "string" and input:gsub('%f[%w](%x%x%x%x%x%x%x%x)%f[%W]', '0x%1') or input
-end
-
 function utils.check_args(wrong_args, usage)
     if wrong_args then
         print(usage)
@@ -105,6 +99,23 @@ function utils.runtime_path(rel)
     end
     os.execute(string.format("mkdir -p '%s' && chmod 700 '%s'", base, base))
     return rel and (base .. "/" .. rel) or base
+end
+
+function utils.find_ws_group(groups, workspaceid)
+    for i, group in ipairs(groups) do
+        for _, v in ipairs(group) do
+            if v == workspaceid then
+                return i
+            end
+        end
+    end
+
+    return nil
+end
+
+function utils.file_exists(name)
+    local result = os.execute("[ -e " .. name .. " ]")
+    return result == true or result == 0
 end
 
 return utils

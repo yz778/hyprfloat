@@ -19,48 +19,39 @@ return {
         max_ratio = 2.2, -- Maximum width/height ratio before adjusting
         min_ratio = 0.9, -- Minimum width/height ratio before adjusting
 
-        -- These options are set when entering Overview mode. When leaving Overview mode, their
-        -- original values will be restored.
-        options = {
-            "general:col.active_border rgba(ffd700ee) rgba(ff8c00ee) 45deg",
-            "general:col.inactive_border rgba(ffd70033) rgba(ff8c0033) 45deg",
-            'general:border_size 5',
+        -- Shell commands to run when toggling overview
+        commands = {
+            "pkill -RTMIN+8 waybar"
         }
+    },
+
+    dynamic_bind = {
+        tiling = {
+            SUPER_LEFT = 'dispatch movefocus l',
+            SUPER_RIGHT = 'dispatch movefocus r',
+            SUPER_UP = 'dispatch movefocus u',
+            SUPER_DOWN = 'dispatch movefocus d'
+        },
+        floating = {
+            SUPER_LEFT = 'dispatch exec hyprfloat snap 0.0 0.5 0.0 1.0',
+            SUPER_RIGHT = 'dispatch exec hyprfloat snap 0.5 1.0 0.0 1.0',
+            SUPER_UP = 'dispatch exec hyprfloat center 1.25',
+            SUPER_DOWN = 'dispatch exec hyprfloat center 0.75',
+        },
     },
 
     float_mode = {
         -- These hyprctl commands are run when entering floating mode
         tiling_commands = {
-            'keyword general:col.active_border rgba(33ccffee) rgba(00ff99ee) 45deg',
-            'keyword general:col.inactive_border rgba(595959aa)',
-            'keyword general:gaps_in 2',
-            'keyword general:gaps_out 2',
-            'keyword general:border_size 5',
-            'keyword unbind SUPER, LEFT',
-            'keyword unbind SUPER, RIGHT',
-            'keyword unbind SUPER, UP',
-            'keyword unbind SUPER, DOWN',
-            'keyword bind SUPER, LEFT, movefocus, l',
-            'keyword bind SUPER, RIGHT, movefocus, r',
-            'keyword bind SUPER, UP, movefocus, u',
-            'keyword bind SUPER, DOWN, movefocus, d',
         },
 
         -- These hyprctl commands are run when entering floating mode
         floating_commands = {
-            'keyword general:col.active_border rgba(00ff99ee) rgba(33ccffee) 45deg',
-            'keyword general:col.inactive_border rgba(595959aa)',
-            'keyword general:gaps_in 1',
-            'keyword general:gaps_out 1',
-            'keyword general:border_size 2',
-            'keyword unbind SUPER, LEFT',
-            'keyword unbind SUPER, RIGHT',
-            'keyword unbind SUPER, UP',
-            'keyword unbind SUPER, DOWN',
-            'keyword bind SUPER, LEFT, exec, hyprfloat snap 0.0 0.5 0.0 1.0',
-            'keyword bind SUPER, RIGHT, exec, hyprfloat snap 0.5 1.0 0.0 1.0',
-            'keyword bind SUPER, UP, exec, hyprfloat center 1.25',
-            'keyword bind SUPER, DOWN, exec, hyprfloat center 0.75',
+        },
+
+        -- Shell commands to run after toggling floating status
+        commands = {
+            "pkill -RTMIN+8 waybar",
         }
     },
 
@@ -139,6 +130,8 @@ return {
             { 4, 5, 6 }, -- monitor 2
             { 7, 8, 9 }, -- monitor 3
         },
+
+        -- Shell commands to run after changing workspaces
         commands = {
             "pkill -RTMIN+8 waybar"
         }

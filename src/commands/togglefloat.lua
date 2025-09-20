@@ -2,11 +2,20 @@ return {
     run = function(args)
         local hyprland = require("lib.hyprland")
         local config = require("lib.config")
+        local utils = require("lib.utils")
 
         local cfg = config.float_mode
         local mode = args[1]
 
-        local windows = hyprland.get_clients()
+        local active_workspace_id = hyprland.get_activeworkspace().id
+
+        local windows = {}
+        for _, win in ipairs(hyprland.get_clients()) do
+            if win.workspace.id == active_workspace_id then
+                table.insert(windows, win)
+            end
+        end
+
         local is_floating = (
             mode == "on" and false
             or mode == "off" and true
@@ -21,7 +30,11 @@ return {
         end
 
         local commands = {}
-        table.insert(commands, string.format('keyword windowrulev2 %s,class:.*', is_floating and "unset" or "float"))
+        local rule = is_floating and "unset" or "float"
+        local cmd = string.format('keyword windowrule %s,workspace:%d', rule, active_workspace_id)
+        utils.debug(cmd)
+        table.insert(commands, cmd)
+
 
         local mode_commands = is_floating and cfg.tiling_commands or cfg.floating_commands
         for _, cmd in ipairs(mode_commands) do
@@ -54,12 +67,16 @@ return {
                 hyprland.hyprctl_batch(table.unpack(restore_commands))
             end
         end
+
+        for _, cmd in ipairs(cfg.commands) do
+            utils.exec_cmd(cmd)
+        end
     end,
     help = {
-        short = "Toggles floating mode for all windows.",
+        short = "Toggles floating mode for the current workspace.",
         usage = "togglefloat [on|off]",
         long = [[
-Switches all windows between floating and tiling layouts.
+Switches all windows in the current workspace between floating and tiling layouts.
 
 **Arguments:**
 - `[on|off]` Optional. Explicitly set all windows to floating ('on') or tiling ('off'). If omitted, it toggles the current state.
