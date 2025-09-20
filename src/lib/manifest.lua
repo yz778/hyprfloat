@@ -1,8 +1,9 @@
 return {
-    version = "1.0.7",
+    version = "2.0.0",
     commands = {
         "alttab",
         "center",
+        "dynamicbind",
         "events",
         "install-config",
         "movemon",

@@ -28,9 +28,6 @@ return {
 
         if utils.file_exists(utils.runtime_path("/overview.sock")) then
             str = str .. " Overview"
-        else
-            local windows = hyprland.get_clients()
-            str = str .. (hyprland.has_floating(windows) and " Floating" or " Tiling")
         end
 
         print(str)

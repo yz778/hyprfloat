@@ -1,10 +1,10 @@
 local lib = {}
+local manifest = require("lib.manifest")
 
 local function print_help()
     print("Usage: hyprfloat <command> [args...]")
     print("\nCommands:\n")
 
-    local manifest = require("lib.manifest")
     local commands = {}
     for _, name in ipairs(manifest.commands) do
         local ok, cmd = pcall(require, "commands." .. name)
@@ -31,6 +31,20 @@ function lib.run(args)
 
     if command_name == "--help" then
         print_help()
+        return
+    end
+
+    local command_found = false
+    for _, name in ipairs(manifest.commands) do
+        local ok, _ = pcall(require, "commands." .. name)
+        if ok then
+            command_found = true
+            break
+        end
+    end
+
+    if not command_found then
+        print("Invalid command: " .. command_name)
         return
     end
 

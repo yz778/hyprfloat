@@ -11,12 +11,6 @@ function utils.exec_cmd(cmd)
     return result
 end
 
-function utils.fix_color_hex(input)
-    -- hyprctl getoption returns colors in legacy format without the leading 0x
-    -- but hyprctl keyword doesn't accept that, so we have it back
-    return type(input) == "string" and input:gsub('%f[%w](%x%x%x%x%x%x%x%x)%f[%W]', '0x%1') or input
-end
-
 function utils.check_args(wrong_args, usage)
     if wrong_args then
         print(usage)

@@ -54,7 +54,12 @@ function hyprland.hyprctl_json(command)
 end
 
 function hyprland.hyprctl_batch(...)
-    local commands = table.concat({ ... }, ";")
+    local args = { ... }
+    if #args == 0 or (#args == 1 and args[1] == "") then
+        return
+    end
+
+    local commands = table.concat(args, ";")
     local batch_command = "[[BATCH]] " .. commands
     hyprland.hyprctl(batch_command)
 end
