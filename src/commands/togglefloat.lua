@@ -4,6 +4,11 @@ return {
         local config = require("lib.config")
         local utils = require("lib.utils")
 
+        if utils.file_exists(utils.runtime_path("/overview.sock")) then
+            utils.debug("Overview mode detected, will not toggle floating")
+            return
+        end
+
         local cfg = config.float_mode
         local mode = args[1]
 
