@@ -35,11 +35,13 @@ return {
         end
 
         local commands = {}
-        local rule = is_floating and "unset" or "float"
-        local cmd = string.format('keyword windowrule %s,workspace:%d', rule, active_workspace_id)
-        utils.debug(cmd)
-        table.insert(commands, cmd)
-
+        if is_floating then
+            table.insert(commands, string.format('keyword windowrule unset,workspace:%d', active_workspace_id))
+            table.insert(commands, string.format('keyword windowrule unset,class:.*'))
+        else
+            table.insert(commands, string.format('keyword windowrule float,workspace:%d', active_workspace_id))
+            table.insert(commands, string.format('keyword windowrule float,class:.*'))
+        end
 
         local mode_commands = is_floating and cfg.tiling_commands or cfg.floating_commands
         for _, cmd in ipairs(mode_commands) do
