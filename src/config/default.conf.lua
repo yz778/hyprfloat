@@ -73,41 +73,42 @@ return {
         default_monitor_index = 0,
 
         -- Tile dimensions
-        base_tile_size = 240,
-        selected_tile_size = 280,
-        tile_container_size = 300,
+        base_tile_size = 160,
+        selected_tile_size = 180,
+        tile_container_size = 190,
 
         -- Grid spacing
         grid_row_spacing = 5,
         grid_column_spacing = 5,
 
         -- Window layout
-        window_margin_top = 20,
-        window_margin_bottom = 20,
-        window_margin_left = 20,
-        window_margin_right = 20,
+        window_margin_top = 10,
+        window_margin_bottom = 10,
+        window_margin_left = 10,
+        window_margin_right = 10,
 
         -- Window stylesheet
         stylesheet = [[
             #alttab-window {
                 background: rgba(30, 30, 30, .75);
             }
+            #alttab-outer {
+                padding:10px;
+            }
             .tile {
                 background-color: transparent;
-                border: 1px solid transparent;
-                border-radius: 4px;
-                padding: 4px;
             }
             .tile.selected {
                 background-color: rgba(100, 200, 255, .30);
                 border: 3px solid #33ccff;
                 border-radius: 8px;
-                padding: 4px;
             }
             #search {
                 border: 1px solid #c0c0c0;
+                margin-bottom:20px;
             }
             #label1 {
+                margin-top:20px;
                 color: #ddeeff;
                 font-size: 16px;
                 font-weight: bold;

@@ -1,36 +1,7 @@
 local hyprland = require('lib.hyprland')
 local utils = require('lib.utils')
-local posix = require('posix')
 
 local shared = {}
-
--- Signal handler to ensure submap reset on exit
-local function cleanup_handler()
-    hyprland.hyprctl("dispatch submap reset")
-end
-
--- Register signal handlers for clean and dirty exits
-local function register_signal_handlers()
-    -- Use pcall to avoid errors if posix module isn't available
-    pcall(function()
-        local signal = posix.signal
-
-        -- Handle common termination signals
-        local signals = {
-            signal.SIGINT,  -- Interrupt (Ctrl+C)
-            signal.SIGTERM, -- Termination request
-            signal.SIGQUIT, -- Quit (Ctrl+\)
-            signal.SIGHUP   -- Hangup
-        }
-
-        for _, sig in ipairs(signals) do
-            signal.signal(sig, cleanup_handler)
-        end
-    end)
-end
-
--- Initialize signal handlers
-register_signal_handlers()
 
 shared.selected_address = nil
 
@@ -78,47 +49,57 @@ function shared.activate()
     )
 end
 
+local function mainloop(action, sameclass)
+    -- build list of clients, taking into account whether we are filtering by the sameclass
+    local active_window = hyprland.get_activewindow()
+    local clients = hyprland.get_clients()
+    if sameclass then
+        local active_class = active_window and active_window.class
+        if active_class then
+            local filtered_clients = {}
+            for _, client in ipairs(clients) do
+                if client.class == active_class then
+                    table.insert(filtered_clients, client)
+                end
+            end
+            clients = filtered_clients
+        end
+    end
+
+    -- Sort by focus history and apply direction
+    if #clients > 1 then
+        clients = shared.sort_and_apply_direction(active_window.workspace.id, clients, action)
+    end
+    shared.selected_address = clients[1].address
+
+    -- UI Launcher Mode: Launch the full UI
+    local alttab_ui = require('commands.alttab_ui')
+    alttab_ui.launch({ clients = clients, shared = shared })
+end
+
 return {
     run = function(args)
+        if args[1] == "mainloop" then
+            local action = args[2]
+            local sameclass = args[3] == "1"
+            mainloop(action, sameclass)
+            return
+        end
+
         utils.debug("-----")
         utils.debug("alttab started with args: " .. table.concat(args, " "))
-
         utils.check_args(#args < 1, "Usage: hyprfloat alttab <next|prev> [sameclass]")
         local action = args[1]
         local valid = { next = true, prev = true }
         utils.check_args(not valid[action], "Invalid first argument")
 
-        -- build list of clients, taking into account whether we are filtering by the sameclass
-        local has_sameclass = args[2] == "sameclass"
-        local active_window = hyprland.get_activewindow()
-        local clients = hyprland.get_clients()
-        if has_sameclass then
-            local active_class = active_window and active_window.class
-            if active_class then
-                local filtered_clients = {}
-                for _, client in ipairs(clients) do
-                    if client.class == active_class then
-                        table.insert(filtered_clients, client)
-                    end
-                end
-                clients = filtered_clients
-            end
-        end
+        local sameclass = args[2] == "sameclass" and "1" or "0"
+        local me = get_script_root() .. '/hyprfloat'
 
-        -- Sort by focus history and apply direction
-        if #clients > 1 then
-            clients = shared.sort_and_apply_direction(active_window.workspace.id, clients, action)
-        end
-        shared.selected_address = clients[1].address
-
-        -- UI Launcher Mode: Launch the full UI
-        local alttab_ui = require('commands.alttab_ui')
-        alttab_ui.launch({
-            clients = clients,
-            shared = shared
-        })
-
-        -- forcefully reset submap
+        -- call self to run mainloop in new process in case it segfaults
+        hyprland.hyprctl("dispatch submap alttab")
+        local cmd = string.format("lua '%s' alttab mainloop %s %s", me, action, sameclass)
+        os.execute(cmd)
         hyprland.hyprctl("dispatch submap reset")
     end,
     help = {
