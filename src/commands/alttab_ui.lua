@@ -613,8 +613,11 @@ function alttab_ui.launch(params)
             end
 
             -- Start async preview capture
-            utils.debug("Starting async preview capture...")
-            async_preview_capture(update_tile_preview)
+            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, function()
+                utils.debug("Starting async preview capture...")
+                async_preview_capture(update_tile_preview)
+                return false -- only run once
+            end)
 
             return false -- only run once
         end)

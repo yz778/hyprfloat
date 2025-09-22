@@ -1,7 +1,36 @@
 local hyprland = require('lib.hyprland')
 local utils = require('lib.utils')
+local posix = require('posix')
 
 local shared = {}
+
+-- Signal handler to ensure submap reset on exit
+local function cleanup_handler()
+    hyprland.hyprctl("dispatch submap reset")
+end
+
+-- Register signal handlers for clean and dirty exits
+local function register_signal_handlers()
+    -- Use pcall to avoid errors if posix module isn't available
+    pcall(function()
+        local signal = posix.signal
+
+        -- Handle common termination signals
+        local signals = {
+            signal.SIGINT,  -- Interrupt (Ctrl+C)
+            signal.SIGTERM, -- Termination request
+            signal.SIGQUIT, -- Quit (Ctrl+\)
+            signal.SIGHUP   -- Hangup
+        }
+
+        for _, sig in ipairs(signals) do
+            signal.signal(sig, cleanup_handler)
+        end
+    end)
+end
+
+-- Initialize signal handlers
+register_signal_handlers()
 
 shared.selected_address = nil
 
@@ -88,6 +117,9 @@ return {
             clients = clients,
             shared = shared
         })
+
+        -- forcefully reset submap
+        hyprland.hyprctl("dispatch submap reset")
     end,
     help = {
         short = "Focuses the next or previous window.",
