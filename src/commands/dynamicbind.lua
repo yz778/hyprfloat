@@ -10,8 +10,10 @@ return {
         local win = hyprland.get_activewindow()
         utils.check_args(not win, "No active window")
 
-        local mode = win.floating and "floating" or "tiling"
         local bind = args[1]
+        local mode = utils.file_exists(utils.runtime_path("/overview.sock")) and "overview"
+            or win.floating and "floating"
+            or "tiling"
         local cmd = cfg[mode][bind]
         if cmd then
             utils.debug(cmd)

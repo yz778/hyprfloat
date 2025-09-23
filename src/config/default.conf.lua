@@ -26,6 +26,12 @@ return {
     },
 
     dynamic_bind = {
+        overview = {
+            SUPER_LEFT = 'dispatch movefocus l',
+            SUPER_RIGHT = 'dispatch movefocus r',
+            SUPER_UP = 'dispatch movefocus u',
+            SUPER_DOWN = 'dispatch movefocus d'
+        },
         tiling = {
             SUPER_LEFT = 'dispatch movefocus l',
             SUPER_RIGHT = 'dispatch movefocus r',
