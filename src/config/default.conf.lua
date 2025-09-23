@@ -27,22 +27,22 @@ return {
 
     dynamic_bind = {
         overview = {
-            SUPER_LEFT = 'dispatch movefocus l',
-            SUPER_RIGHT = 'dispatch movefocus r',
-            SUPER_UP = 'dispatch movefocus u',
-            SUPER_DOWN = 'dispatch movefocus d'
+            SUPER_LEFT  = 'hyprfloat:movefocus l',
+            SUPER_RIGHT = 'hyprfloat:movefocus r',
+            SUPER_UP    = 'hyprfloat:movefocus u',
+            SUPER_DOWN  = 'hyprfloat:movefocus d'
         },
         tiling = {
-            SUPER_LEFT = 'dispatch movefocus l',
+            SUPER_LEFT  = 'dispatch movefocus l',
             SUPER_RIGHT = 'dispatch movefocus r',
-            SUPER_UP = 'dispatch movefocus u',
-            SUPER_DOWN = 'dispatch movefocus d'
+            SUPER_UP    = 'dispatch movefocus u',
+            SUPER_DOWN  = 'dispatch movefocus d'
         },
         floating = {
-            SUPER_LEFT = 'dispatch exec hyprfloat snap 0.0 0.5 0.0 1.0',
-            SUPER_RIGHT = 'dispatch exec hyprfloat snap 0.5 1.0 0.0 1.0',
-            SUPER_UP = 'dispatch exec hyprfloat center 1.25',
-            SUPER_DOWN = 'dispatch exec hyprfloat center 0.75',
+            SUPER_LEFT  = 'hyprfloat:snap 0.0 0.5 0.0 1.0',
+            SUPER_RIGHT = 'hyprfloat:snap 0.5 1.0 0.0 1.0',
+            SUPER_UP    = 'hyprfloat:center 1.25',
+            SUPER_DOWN  = 'hyprfloat:center 0.75',
         },
     },
 

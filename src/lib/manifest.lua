@@ -6,6 +6,7 @@ return {
         "dynamicbind",
         "events",
         "install-config",
+        "movefocus",
         "movemon",
         "overview",
         "snap",
