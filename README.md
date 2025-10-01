@@ -91,6 +91,27 @@ Connects to the Hyprland event socket and prints all incoming events to the cons
 Copies the default configuration file to the user's config directory, allowing for user-specific customizations.
 </blockquote>
 
+#### `movefocus <direction>`
+<blockquote>
+Move floating window focus by proximity in a given direction with wrapping support.
+
+The algorithm treats floating windows as positioned in a 2D matrix and finds the nearest window in the specified direction. If no window exists in that direction, it wraps around to the opposite side.
+
+**Arguments:**
+- `<direction>` Required. Direction to move focus:
+  - `u` - Focus nearest window above (wraps to bottom)
+  - `d` - Focus nearest window below (wraps to top)
+  - `l` - Focus nearest window to the left (wraps to right)
+  - `r` - Focus nearest window to the right (wraps to left)
+
+**Behavior:**
+- Only considers floating windows on the current workspace
+- Uses window center points for distance calculations
+- Prioritizes windows in the target direction, then falls back to wrapping
+- Secondary sorting by distance for tie-breaking
+
+</blockquote>
+
 #### `movemon <direction>`
 <blockquote>
 Moves the active window to a different monitor while maintaining its relative position and size.
