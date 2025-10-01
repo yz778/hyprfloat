@@ -73,6 +73,7 @@ return {
             "dispatch fullscreenstate 0",
             string.format("dispatch moveactive exact %d %d", new_x, new_y),
             string.format("dispatch resizeactive exact %d %d", new_w, new_h),
+            string.format("dispatch focuswindow address:%s", old.address),
             "dispatch alterzorder top"
         )
     end,
