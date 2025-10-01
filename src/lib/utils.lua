@@ -118,4 +118,12 @@ function utils.file_exists(name)
     return result == true or result == 0
 end
 
+function utils.explode(delim, input)
+    local t = {}
+    for word in string.gmatch(input, delim) do
+        table.insert(t, word)
+    end
+    return t
+end
+
 return utils

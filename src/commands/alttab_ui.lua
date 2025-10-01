@@ -6,7 +6,6 @@ local Gdk = lgi.require('Gdk', '3.0')
 local GdkPixbuf = lgi.require('GdkPixbuf', '2.0')
 local GLib = lgi.GLib
 local config = require('lib.config')
-local hyprland = require('lib.hyprland')
 local utils = require('lib.utils')
 
 local alt_release_timer = nil
@@ -22,11 +21,6 @@ local visible_clients = {} -- Array of indices into all_clients
 
 local function altkey_down()
     return bit32.band(Gdk.Keymap.get_default():get_modifier_state(), Gdk.ModifierType.MOD1_MASK) ~= 0
-end
-
-local function cleanup()
-    utils.debug("Cleaning up")
-    hyprland.hyprctl("dispatch submap reset")
 end
 
 function alttab_ui.launch(params)
@@ -52,10 +46,6 @@ function alttab_ui.launch(params)
     local grid, label1, label2, window, outer, scrolled_window
     local css_provider, display, monitor, max_cols, cols, rows, window_w, window_h
     local visible_rows = nil
-
-    function app:on_shutdown()
-        cleanup()
-    end
 
     local function filter_clients(query)
         visible_clients = {}
@@ -140,8 +130,8 @@ function alttab_ui.launch(params)
         visible_rows = math.min(total_rows, max_rows)
         rows = total_rows
 
-        window_w = cols * cfg.tile_container_size + cfg.window_margin_left + cfg.window_margin_right
-        window_h = visible_rows * cfg.tile_container_size + cfg.window_margin_top + cfg.window_margin_bottom
+        window_w = cols * cfg.tile_container_size
+        window_h = visible_rows * cfg.tile_container_size
 
         if scrolled_window then
             scrolled_window:set_size_request(cols * cfg.tile_container_size, visible_rows * cfg.tile_container_size)
@@ -387,8 +377,6 @@ function alttab_ui.launch(params)
     end
 
     function app:on_activate()
-        hyprland.hyprctl("dispatch submap alttab")
-
         local dummywin = Gtk.ApplicationWindow {
             application = app,
             title = "hyprfloat:dummy"
@@ -417,8 +405,8 @@ function alttab_ui.launch(params)
             local geom = monitor:get_geometry()
 
             -- Calculate available space for tiles (screen minus window margins)
-            local available_width = geom.width - cfg.window_margin_left - cfg.window_margin_right
-            local available_height = geom.height - cfg.window_margin_top - cfg.window_margin_bottom
+            local available_width = geom.width
+            local available_height = geom.height
 
             -- Calculate maximum grid dimensions that fit on screen
             max_cols = math.floor(available_width / cfg.tile_container_size)
@@ -489,8 +477,8 @@ function alttab_ui.launch(params)
             label2:set_halign(Gtk.Align.CENTER)
 
             grid = Gtk.Grid {
-                halign = Gtk.Align.CENTER, valign = Gtk.Align.CENTER,
-                row_spacing = cfg.grid_row_spacing, column_spacing = cfg.grid_column_spacing,
+                halign = Gtk.Align.CENTER,
+                valign = Gtk.Align.CENTER,
             }
 
             -- Create scrollable container for the grid
@@ -499,10 +487,11 @@ function alttab_ui.launch(params)
             scrolled_window:add(grid)
 
             outer = Gtk.Box {
-                orientation = Gtk.Orientation.VERTICAL, halign = Gtk.Align.CENTER, valign = Gtk.Align.CENTER,
-                margin_left = cfg.window_margin_left, margin_right = cfg.window_margin_right,
-                margin_top = cfg.window_margin_top, margin_bottom = cfg.window_margin_bottom,
+                orientation = Gtk.Orientation.VERTICAL,
+                halign = Gtk.Align.CENTER,
+                valign = Gtk.Align.CENTER,
             }
+            outer:set_name("alttab-outer")
             outer:pack_start(search_entry, false, false, 5)
             outer:pack_start(scrolled_window, true, true, 0)
             outer:pack_start(label1, false, false, 0)
@@ -613,8 +602,11 @@ function alttab_ui.launch(params)
             end
 
             -- Start async preview capture
-            utils.debug("Starting async preview capture...")
-            async_preview_capture(update_tile_preview)
+            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, function()
+                utils.debug("Starting async preview capture...")
+                async_preview_capture(update_tile_preview)
+                return false -- only run once
+            end)
 
             return false -- only run once
         end)
@@ -629,7 +621,6 @@ function alttab_ui.launch(params)
     local signals = { 'SIGINT', 'SIGTERM', 'SIGHUP' }
     for _, sig in ipairs(signals) do
         posix.signal(posix[sig], function()
-            cleanup()
             app:quit()
         end)
     end
@@ -639,12 +630,8 @@ function alttab_ui.launch(params)
         app:run(nil)
     end)
     if not success then
-        cleanup()
         error(err)
     end
-
-    -- Ensure cleanup runs after app:run completes
-    cleanup()
 end
 
 return alttab_ui
