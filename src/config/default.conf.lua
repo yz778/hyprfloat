@@ -47,7 +47,7 @@ return {
     },
 
     float_mode = {
-        -- These hyprctl commands are run when entering floating mode
+        -- These hyprctl commands are run when entering tiling mode
         tiling_commands = {
         },
 
