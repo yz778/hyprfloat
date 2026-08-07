@@ -59,18 +59,6 @@
               exec ${lua}/bin/lua $out/share/hyprfloat/hyprfloat "\$@"
               EOF
               chmod +x $out/bin/hyprfloat
-
-              mkdir -p $out/share/applications
-              cat > $out/share/applications/hyprfloat.desktop << EOF
-              [Desktop Entry]
-              Name=Hyprfloat
-              Comment=Hyprland window management utility
-              Exec=$out/bin/hyprfloat
-              Type=Application
-              Categories=Utility;System;
-              Keywords=hyprland;window;float;
-              EOF
-
               runHook postInstall
             '';
 
